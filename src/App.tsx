@@ -62,9 +62,17 @@ const people = [
 export function App() {
   useEffect(() => {
     const atalho = location.hash.slice(1);
-    if (!(atalho in ATALHOS)) return;
-    const t = setTimeout(() => goToForm(ATALHOS[atalho]), 300);
-    return () => clearTimeout(t);
+    if (!(atalho in ATALHOS) && atalho !== "canton") return;
+    let vivo = true;
+    // rola só depois das fontes e das fotos: antes disso a página ainda cresce e o alvo escorrega
+    const ir = () => {
+      if (!vivo) return;
+      if (atalho in ATALHOS) window.dispatchEvent(new CustomEvent("gm:objetivo", { detail: ATALHOS[atalho] }));
+      document.getElementById(atalho === "canton" ? "canton" : "formulario")?.scrollIntoView({ behavior: "instant" });
+    };
+    const carregou = new Promise((ok) => (document.readyState === "complete" ? ok(null) : addEventListener("load", () => ok(null), { once: true })));
+    Promise.all([document.fonts?.ready, carregou]).then(() => { ir(); setTimeout(ir, 600); });
+    return () => { vivo = false; };
   }, []);
 
   return (
