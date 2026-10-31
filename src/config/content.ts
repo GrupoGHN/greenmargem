@@ -3,12 +3,35 @@ export const WHATSAPP = "5511963680529";
 export const INSTAGRAM = "https://www.instagram.com/greenmargem/";
 export const GUANXI_FORM = "https://forms.gle/kJCmwUDveYPQdnUU9";
 
-export const OBJ = {
-  vender: "Vender mais com margem no marketplace",
-  importar: "Importar da China",
-  canton: "Planejar a Canton Fair 2027",
-  guanxi: "Entrar no Clube Guanxi",
-} as const;
+// diagnóstico (31/10): as respostas vão por POST pro Apps Script (apps-script/diagnostico.gs), que grava na planilha e manda e-mail ao time.
+// Enquanto a URL estiver vazia, o lead manda o resumo pelo WhatsApp.
+export const APPS_SCRIPT_URL = "";
+// pergunta de corte da imersão e da importação (referência China Link: R$ 100 mil); o Greg ainda define o valor
+export const CORTE_INVESTIMENTO = 100_000;
+
+// medição: só liga (com aviso de cookies) quando um destes IDs for preenchido
+export const META_PIXEL_ID = "";
+export const GA4_ID = "";
+
+export const EMPRESA = { razao: "GREEN MARGEM ASSESSORIA E TREINAMENTO LTDA", cnpj: "69.373.825/0001-58" };
+
+// prazo do primeiro contato do time pelo WhatsApp, na tela final do diagnóstico; o Greg ainda confirma se o time cumpre
+export const PRAZO_CONTATO = "em até 1 dia útil";
+
+export const CANTON_FASES: [string, string][] = [
+  ["Fase 1 · abril", "Eletrônicos, eletrodomésticos, iluminação, máquinas, ferramentas, veículos e peças."],
+  ["Fase 2 · abril", "Utilidades domésticas, cozinha, decoração, presentes, móveis e materiais de construção."],
+  ["Fase 3 · início de maio", "Moda, tecidos, calçados, bolsas, brinquedos, bebê, escritório, saúde e alimentos."],
+];
+
+export const CANTON_ETAPAS: [string, string[]][] = [
+  ["Antes", ["Produto escolhido pela conta", "A fase certa da feira", "Custo total simulado (produto, frete, impostos e câmbio)", "Lista de fornecedores para visitar", "Orientação de visto e carta-convite", "Agenda dos dias"]],
+  ["Durante", ["A gente vai estar na feira em 2027", "O que perguntar a cada fábrica", "Como comparar preço, pedido mínimo e prazo", "O que pedir de amostra"]],
+  ["Depois", ["Amostra, contrato e proforma", "Pagamento seguro por câmbio", "Frete, despachante e alfândega", "Primeiro pedido acompanhado até o seu estoque"]],
+];
+
+// números da feira conferidos em cantonfair.org.cn em 31/10/2026 (140ª edição); só entra aqui o que foi conferido
+export const CANTON_FATOS = ["Em Guangzhou, duas edições por ano", "13 categorias e 54 seções de exposição", "3 fases, uma para cada tipo de produto"];
 
 export const MARKETPLACES = ["Mercado Livre", "Shopee", "TikTok Shop", "Shein", "Temu"];
 

@@ -1,14 +1,17 @@
-import { ArrowRight, Check, ChevronDown, ExternalLink, Instagram, MessageCircle, X } from "lucide-react";
+import { ArrowRight, Check, ChevronDown, ExternalLink, Instagram, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
-import { CONTEUDOS, FAQ, GUANXI_FORM, INSTAGRAM, MARKETPLACES, OBJ, OLHAMOS, OPERACAO } from "@/config/content";
-import { goToForm } from "@/lib/lead";
+import { CANTON_ETAPAS as timeline, CANTON_FASES as fases, CONTEUDOS, EMPRESA, FAQ, GUANXI_FORM, INSTAGRAM, MARKETPLACES, OLHAMOS, OPERACAO } from "@/config/content";
+import { goToForm, type Objetivo } from "@/lib/lead";
 import { LeadForm } from "@/components/LeadForm";
+import { CookieBanner } from "@/components/CookieBanner";
+import { StickyCta } from "@/components/StickyCta";
 
 const asset = (f: string) => import.meta.env.BASE_URL + f;
 const logo = asset("logo-wide.png");
 
-// links curtos (greenmargem.com.br/diagnostico etc.) caem aqui como #atalho e abrem o formulário já no objetivo certo
-const ATALHOS: Record<string, string> = { diagnostico: OBJ.vender, importar: OBJ.importar, guanxi: OBJ.guanxi };
+// links curtos (greenmargem.com.br/diagnostico etc.) caem aqui como #atalho e abrem o diagnóstico já no objetivo certo;
+// o /canton continua rolando até a seção da feira, com a imersão já marcada no diagnóstico
+const ATALHOS: Record<string, Objetivo> = { diagnostico: "vender", importar: "importar", guanxi: "importar", canton: "imersao" };
 
 function Section({ id, alt, children }: { id?: string; alt?: boolean; children: ReactNode }) {
   return (
@@ -42,31 +45,19 @@ const services: { group: string; items: { name: string; badge?: string; who: str
   {
     group: "Vender com margem",
     items: [
-      { name: "Diagnóstico de margem", badge: "Gratuito · 20 min", who: "Pra quem já vende.", desc: "Você mostra a operação e a gente aponta onde a sua margem está vazando hoje.", cta: "Quero o diagnóstico", action: () => goToForm(OBJ.vender) },
-      { name: "Assessoria de marketplace", who: "Pra quem quer crescer com a margem sob controle.", desc: "Plano do que ajustar primeiro e acompanhamento: precificação, ADS com lucro, anúncios e operação. Você executa com a gente do lado.", cta: "Quero a assessoria", action: () => goToForm(OBJ.vender) },
-      { name: "Gestão de contas", who: "Pra quem quer tirar a operação das costas.", desc: "Nossa equipe de gestores cuida das suas contas no dia a dia: anúncios, campanhas, preço e catálogo.", cta: "Quero a gestão", action: () => goToForm(OBJ.vender) },
+      { name: "Diagnóstico de margem", badge: "Gratuito · 20 min", who: "Pra quem já vende.", desc: "Você mostra a operação e a gente aponta onde a sua margem está vazando hoje.", cta: "Quero o diagnóstico", action: () => goToForm("vender") },
+      { name: "Assessoria de marketplace", who: "Pra quem quer crescer com a margem sob controle.", desc: "Plano do que ajustar primeiro e acompanhamento: precificação, ADS com lucro, anúncios e operação. Você executa com a gente do lado.", cta: "Quero a assessoria", action: () => goToForm("vender") },
+      { name: "Gestão de contas", who: "Pra quem quer tirar a operação das costas.", desc: "Nossa equipe de gestores cuida das suas contas no dia a dia: anúncios, campanhas, preço e catálogo.", cta: "Quero a gestão", action: () => goToForm("vender") },
     ],
   },
   {
     group: "Comprar da China",
     items: [
-      { name: "Primeira importação acompanhada", who: "Pra quem nunca importou ou importou mal.", desc: "Do produto escolhido pela conta até a mercadoria no seu estoque: custo total antes de pagar, fornecedor testado, amostra, pagamento por câmbio, frete e despachante.", cta: "Quero importar", action: () => goToForm(OBJ.importar) },
-      { name: "Planejamento Canton Fair 2027", who: "Pra quem vai à feira e quer voltar com fornecedor, não só com cartão de visita.", desc: "Antes, durante e depois da maior feira de importação do mundo.", cta: "Ver a Canton Fair", action: () => document.getElementById("canton")?.scrollIntoView({ behavior: "smooth" }) },
+      { name: "Primeira importação acompanhada", who: "Pra quem nunca importou ou importou mal.", desc: "Do produto escolhido pela conta até a mercadoria no seu estoque: custo total antes de pagar, fornecedor testado, amostra, pagamento por câmbio, frete e despachante.", cta: "Quero importar", action: () => goToForm("importar") },
+      { name: "Planejamento Canton Fair 2027", who: "Pra quem vai à feira e quer voltar com fornecedor, não só com cartão de visita.", desc: "Antes, durante e depois da maior feira de importação do mundo.", cta: "Quero ir à Canton Fair 2027", action: () => goToForm("imersao") },
       { name: "Clube Guanxi", who: "Pra quem fatura acima de R$ 100 mil por mês.", desc: "Grupo fechado de importadores e sellers, com anuidade e conexão direta com a China.", cta: "Pedir convite", action: () => window.open(GUANXI_FORM, "_blank", "noopener"), external: true },
     ],
   },
-];
-
-const fases: [string, string][] = [
-  ["Fase 1 · abril", "Eletrônicos, eletrodomésticos, iluminação, máquinas, ferramentas, veículos e peças."],
-  ["Fase 2 · abril", "Utilidades domésticas, cozinha, decoração, presentes, móveis e materiais de construção."],
-  ["Fase 3 · início de maio", "Moda, tecidos, calçados, bolsas, brinquedos, bebê, escritório, saúde e alimentos."],
-];
-
-const timeline: [string, string[]][] = [
-  ["Antes", ["Produto escolhido pela conta", "A fase certa da feira", "Custo total simulado (produto, frete, impostos e câmbio)", "Lista de fornecedores para visitar", "Orientação de visto e carta-convite", "Agenda dos dias"]],
-  ["Durante", ["A gente vai estar na feira em 2027", "O que perguntar a cada fábrica", "Como comparar preço, pedido mínimo e prazo", "O que pedir de amostra"]],
-  ["Depois", ["Amostra, contrato e proforma", "Pagamento seguro por câmbio", "Frete, despachante e alfândega", "Primeiro pedido acompanhado até o seu estoque"]],
 ];
 
 // time (30/10): cada um pelo lado da conta que cuida, sem "especialista" e sem "sócio"
@@ -82,12 +73,12 @@ export function App() {
   const [fase, setFase] = useState(0);
   useEffect(() => {
     const atalho = location.hash.slice(1);
-    if (!(atalho in ATALHOS) && atalho !== "canton") return;
+    if (!(atalho in ATALHOS)) return;
     let vivo = true;
     // rola só depois das fontes e das fotos: antes disso a página ainda cresce e o alvo escorrega
     const ir = () => {
       if (!vivo) return;
-      if (atalho in ATALHOS) window.dispatchEvent(new CustomEvent("gm:objetivo", { detail: ATALHOS[atalho] }));
+      window.dispatchEvent(new CustomEvent("gm:objetivo", { detail: { objetivo: ATALHOS[atalho], origem: atalho } }));
       document.getElementById(atalho === "canton" ? "canton" : "formulario")?.scrollIntoView({ behavior: "instant" });
     };
     const carregou = new Promise((ok) => (document.readyState === "complete" ? ok(null) : addEventListener("load", () => ok(null), { once: true })));
@@ -98,6 +89,7 @@ export function App() {
   return (
     <div className="min-h-screen">
       <header className="fixed inset-x-0 top-0 z-40 border-b bg-background/85 backdrop-blur">
+        <p className="bg-primary px-3 py-1.5 text-center text-[0.66rem] font-semibold uppercase tracking-[0.03em] text-primary-foreground sm:text-xs sm:tracking-[0.12em]">Para empresas que vendem ou querem comprar direto da China</p>
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-5">
           <a href="#topo" aria-label="Green Margem, início"><img src={logo} alt="Green Margem" className="h-9 w-auto" /></a>
           <nav className="hidden items-center gap-7 text-sm text-muted-foreground lg:flex">
@@ -105,13 +97,13 @@ export function App() {
               <a key={h} href={h} className="transition-colors hover:text-foreground">{l}</a>
             ))}
           </nav>
-          <button onClick={() => goToForm()} className="btn-primary px-4 py-2.5 text-sm">Falar com a gente</button>
+          <button onClick={() => goToForm()} className="btn-primary px-4 py-2.5 text-sm">Fazer o diagnóstico</button>
         </div>
       </header>
 
       <main>
         {/* Hero */}
-        <section id="topo" className="relative overflow-hidden px-5 pb-12 pt-24 sm:pb-24 sm:pt-40">
+        <section id="topo" className="relative overflow-hidden px-5 pb-12 pt-32 sm:pb-24 sm:pt-48">
           {/* foto real do galpão: no desktop fica por trás, à direita do texto; no celular entra depois dos botões (fardo branco atrás do título apagava a letra) */}
           <img src={asset("operacao/hero-galpao.webp")} alt="" aria-hidden fetchPriority="high" className="pointer-events-none absolute inset-0 hidden h-full w-full object-cover object-[70%_50%] opacity-80 sm:block" />
           <div className="pointer-events-none absolute inset-0 hidden bg-gradient-to-r from-background via-background/90 to-background/20 sm:block" aria-hidden />
@@ -125,8 +117,8 @@ export function App() {
               A gente opera 16 lojas próprias em 5 marketplaces e compra direto de fábrica na China. É isso que a gente leva pra sua operação: vender com margem e comprar melhor.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <button onClick={() => goToForm(OBJ.vender)} className="btn-primary text-base">Quero o diagnóstico gratuito<ArrowRight size={18} /></button>
-              <button onClick={() => goToForm(OBJ.importar)} className="btn-outline text-base">Quero importar da China</button>
+              <button onClick={() => goToForm()} className="btn-primary text-base">Fazer o diagnóstico gratuito<ArrowRight size={18} /></button>
+              <button onClick={() => goToForm("imersao")} className="btn-outline text-base">Quero ir à Canton Fair 2027</button>
             </div>
             <img src={asset("operacao/hero-galpao.webp")} alt="Fardos e prateleiras no galpão da operação" className="mt-8 aspect-[16/9] w-full rounded-xl border object-cover sm:hidden" />
             <div className="mt-3 grid grid-cols-2 gap-px overflow-hidden rounded-xl border bg-border sm:mt-14 sm:grid-cols-4">
@@ -213,14 +205,14 @@ export function App() {
               </div>
             ))}
           </div>
-          <button onClick={() => goToForm(OBJ.canton)} className="btn-primary mt-10 text-base">Quero planejar a Canton Fair<ArrowRight size={18} /></button>
+          <button onClick={() => goToForm("imersao")} className="btn-primary mt-10 text-base">Quero ir à Canton Fair 2027<ArrowRight size={18} /></button>
         </Section>
 
         {/* Como funciona */}
         <Section id="como-funciona" alt>
           <Head eyebrow="Como funciona">3 passos, sem enrolação</Head>
           <ol className="grid gap-3 md:grid-cols-3 md:gap-4">
-            {[["Você conta da sua operação", "Leva 2 minutos."], ["A gente chama você no WhatsApp", "E marca o diagnóstico de 20 minutos."], ["Você sai com o plano do que fazer primeiro", "Contratando a gente ou não."]].map(([t, d], n) => (
+            {[["Você faz o diagnóstico", "São 3 passos. Leva menos de 1 minuto."], ["A gente chama você no WhatsApp", "E marca o diagnóstico de 20 minutos."], ["Você sai com o plano do que fazer primeiro", "Contratando a gente ou não."]].map(([t, d], n) => (
               <li key={t} className="card-gm flex items-start gap-4 p-5 md:block md:p-6">
                 <span className="heading text-5xl text-primary md:text-6xl">{n + 1}</span>
                 <div>
@@ -313,25 +305,27 @@ export function App() {
         {/* Formulário */}
         <Section id="formulario">
           <div className="mx-auto max-w-2xl">
-            <h2 className="heading text-4xl sm:text-6xl">Fale com a gente</h2>
-            <p className="mt-3 mb-8 text-lg text-muted-foreground">Leva 2 minutos. A resposta vem no WhatsApp.</p>
+            <p className="eyebrow mb-3">Gratuito</p>
+            <h2 className="heading text-4xl sm:text-6xl">Diagnóstico da sua operação</h2>
+            <p className="mt-3 mb-8 text-lg text-muted-foreground">São 3 passos. Leva menos de 1 minuto.</p>
             <LeadForm />
           </div>
         </Section>
       </main>
 
-      <footer className="border-t px-5 py-16 text-center">
+      <footer className="border-t px-5 pt-16 pb-28 text-center sm:pb-16">
         <p className="heading mx-auto max-w-5xl text-4xl sm:text-7xl">
           Segue a <a href={INSTAGRAM} target="_blank" rel="noreferrer" className="text-primary hover:underline">@greenmargem</a> pra não ficar no <span className="text-alert">vermelho</span>
         </p>
         <p className="mt-6 text-muted-foreground">Resultado a gente não promete. Processo a gente mostra.</p>
         <img src={logo} alt="Green Margem" className="mx-auto mt-10 h-8 w-auto" />
         <p className="mt-3 text-sm text-muted-foreground">© 2026 Green Margem</p>
+        <p className="mt-2 text-xs text-muted-foreground">{EMPRESA.razao} · CNPJ {EMPRESA.cnpj}</p>
+        <a href={asset("privacidade/")} className="mt-2 inline-block text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground">Política de privacidade</a>
       </footer>
 
-      <button onClick={() => goToForm()} aria-label="Falar com a gente" className="btn-primary fixed bottom-5 right-5 z-40 h-14 w-14 rounded-full p-0 shadow-lg">
-        <MessageCircle size={24} />
-      </button>
+      <StickyCta />
+      <CookieBanner />
     </div>
   );
 }

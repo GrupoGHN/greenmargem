@@ -1,17 +1,17 @@
-import { useEffect, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, Instagram, MessageCircle } from "lucide-react";
-import { GUANXI_FORM, INSTAGRAM, OBJ } from "@/config/content";
-import { buildMessage, emptyAnswers, isNotNow, maskPhone, stepsFor, whatsappUrl, type Answers } from "@/lib/lead";
+import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, ArrowRight, Check, Factory, Handshake, Instagram, MessageCircle, TrendingUp } from "lucide-react";
+import { CANTON_ETAPAS, CANTON_FATOS, GUANXI_FORM, INSTAGRAM, PRAZO_CONTATO } from "@/config/content";
+import {
+  FATURAMENTO, JA_IMPORTOU, OBJETIVOS, SEM_EMPRESA, buildMessage, emailOk, emptyAnswers, enviarDiagnostico, maskPhone,
+  perguntaCorte, phoneOk, precisaCorte, saida, valorCorte, whatsappUrl, type Answers, type IrPara, type Objetivo,
+} from "@/lib/lead";
+import { medirLead } from "@/components/CookieBanner";
 
-const P2 = ["Ainda não tenho empresa", "Revendo produto de outros", "Tenho marca própria", "Fabrico", "Já importo"];
-const P3 = ["Mercado Livre", "Shopee", "TikTok Shop", "Shein", "Temu", "Amazon", "Loja física", "Site próprio", "Ainda não vendo"];
-const P4 = ["Ainda não faturo", "Até R$ 30 mil", "R$ 30 mil a R$ 100 mil", "R$ 100 mil a R$ 300 mil", "R$ 300 mil a R$ 1 milhão", "Acima de R$ 1 milhão"];
-const P5 = ["Até R$ 20 mil", "R$ 20 mil a R$ 50 mil", "R$ 50 mil a R$ 100 mil", "Acima de R$ 100 mil", "Ainda não sei"];
-const P6 = ["Agora", "Em até 30 dias", "Em até 3 meses", "Só estou pesquisando"];
+const base = import.meta.env.BASE_URL;
 
-function Single({ options, value, onChange }: { options: string[]; value: string; onChange: (v: string) => void }) {
+function Single({ options, value, onChange, label }: { options: string[]; value: string; onChange: (v: string) => void; label?: string }) {
   return (
-    <div role="radiogroup" className="grid gap-2">
+    <div role="radiogroup" aria-label={label} className="grid gap-2">
       {options.map((o) => (
         <button key={o} type="button" role="radio" aria-checked={value === o} onClick={() => onChange(o)} className="option">
           <span className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border ${value === o ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/40"}`}>
@@ -24,128 +24,270 @@ function Single({ options, value, onChange }: { options: string[]; value: string
   );
 }
 
+const Rotulo = ({ children, opcional }: { children: string; opcional?: boolean }) => (
+  <span className="mb-2 block text-sm font-semibold">{children}{opcional && <span className="font-normal text-muted-foreground"> (opcional)</span>}</span>
+);
+
 export function LeadForm() {
   const [a, setA] = useState<Answers>(emptyAnswers);
   const [i, setI] = useState(0);
-  const [done, setDone] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+  const [enviado, setEnviado] = useState<boolean | null>(null); // null = ainda no formulário
+  const topo = useRef<HTMLDivElement>(null);
   const set = <K extends keyof Answers>(k: K, v: Answers[K]) => setA((p) => ({ ...p, [k]: v }));
 
   useEffect(() => {
     const h = (e: Event) => {
-      const v = (e as CustomEvent<string>).detail;
-      setA((p) => ({ ...p, objetivo: v }));
-      setDone(false);
-      setI(0);
+      const { objetivo, origem } = (e as CustomEvent<IrPara>).detail ?? {};
+      if (!objetivo && !origem) return; // botão genérico: não apaga o que a pessoa já respondeu
+      setA((p) => ({ ...p, ...(objetivo ? { objetivo } : {}), ...(origem ? { origem } : {}) }));
+      if (objetivo) { setEnviado(null); setI(0); }
     };
     window.addEventListener("gm:objetivo", h);
     return () => window.removeEventListener("gm:objetivo", h);
   }, []);
 
-  const steps = stepsFor(a);
-  const step = steps[i];
-  const phoneOk = a.whatsapp.replace(/\D/g, "").length >= 10;
-  const valid =
-    (step === "p1" && !!a.objetivo) || (step === "p2" && !!a.empresa) || (step === "p3" && a.canais.length > 0) ||
-    (step === "p4" && !!a.faturamento) || (step === "p5" && !!a.investimento) || (step === "p6" && !!a.quando) ||
-    (step === "p7" && a.nome.trim().length > 1 && phoneOk);
+  const corte = precisaCorte(a);
+  const valid = [
+    !!a.objetivo,
+    !!a.faturamento && (a.empresa.trim().length > 1 || a.faturamento === SEM_EMPRESA) && !!a.jaImportou && (!corte || !!a.corte),
+    a.nome.trim().length > 2 && phoneOk(a.whatsapp) && emailOk(a.email) && a.consentimento,
+  ][i];
 
-  const next = () => { if (!valid) return; if (i === steps.length - 1) setDone(true); else setI(i + 1); };
-  const wa = whatsappUrl(buildMessage(a));
-
-  const titles: Record<string, [string, string?]> = {
-    p1: ["O que você quer agora?", "Operamos 16 lojas próprias em 5 marketplaces."],
-    p2: ["Como é a sua empresa hoje?", "Compramos direto de fábrica na China."],
-    p3: ["Onde você vende?", "A conta da margem muda em cada marketplace."],
-    p4: ["Quanto você fatura por mês?", "Suas respostas ficam só entre você e a Green Margem."],
-    p5: ["Quanto pretende investir no primeiro pedido?", "Antes de pagar fornecedor, a gente faz a conta completa."],
-    p6: ["Quando quer começar?"],
-    p7: ["Seus dados para contato"],
+  const enviar = async () => {
+    setEnviando(true);
+    const ok = await enviarDiagnostico(a);
+    setEnviando(false);
+    setEnviado(ok);
+    medirLead(a.objetivo);
+    requestAnimationFrame(() => topo.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
   };
+  const next = () => { if (!valid || enviando) return; if (i === 2) void enviar(); else setI(i + 1); };
 
-  if (done) {
-    const notNow = isNotNow(a);
-    return (
-      <div className="card-gm p-6 sm:p-8">
-        {notNow ? (
+  if (enviado !== null) return <div ref={topo} className="scroll-mt-24"><Resultado a={a} enviado={enviado} revisar={() => { setEnviado(null); setI(2); }} /></div>;
+
+  const titulos = ["O que você quer agora?", "Sobre a sua empresa", "Seus dados para contato"];
+  return (
+    <div ref={topo} className="scroll-mt-24">
+      <form className="card-gm p-6 sm:p-8" onSubmit={(e) => { e.preventDefault(); next(); }} noValidate>
+        <div className="mb-6">
+          <div className="grid grid-cols-3 gap-1.5">
+            {[0, 1, 2].map((n) => <div key={n} className={`h-1.5 rounded-full ${n <= i ? "bg-primary" : "bg-background"}`} />)}
+          </div>
+          <p className="mt-2 text-center text-xs text-muted-foreground">Passo {i + 1} de 3</p>
+        </div>
+        <h3 className="heading mb-5 text-2xl sm:text-3xl">{titulos[i]}</h3>
+
+        {i === 0 && (
           <>
-            <h3 className="heading text-3xl sm:text-4xl">Não é um não. É o momento.</h3>
-            <p className="mt-4 text-muted-foreground">Pelo que você respondeu, o melhor agora é aprender o caminho antes de investir. Começa pelo conteúdo gratuito no @greenmargem. Quando estiver pronto, a gente conversa.</p>
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <a href={INSTAGRAM} target="_blank" rel="noreferrer" className="btn-primary"><Instagram size={18} />Ver o conteúdo no Instagram</a>
-              <a href={wa} target="_blank" rel="noreferrer" className="btn-outline">Quero falar mesmo assim</a>
-            </div>
-          </>
-        ) : (
-          <>
-            <h3 className="heading text-3xl sm:text-4xl">O que acontece agora</h3>
-            <ol className="mt-5 grid gap-3">
-              {["Você manda a mensagem pronta no WhatsApp.", "A gente responde e marca o diagnóstico de 20 minutos.", "Você sai com o plano do que fazer primeiro."].map((t, n) => (
-                <li key={t} className="flex gap-3"><span className="heading text-2xl text-primary">{n + 1}.</span><span className="pt-0.5">{t}</span></li>
-              ))}
-            </ol>
-            <a href={wa} target="_blank" rel="noreferrer" className="btn-primary mt-6 w-full py-4 text-lg"><MessageCircle size={20} />Enviar no WhatsApp</a>
-            {a.objetivo === OBJ.guanxi && (
-              <a href={GUANXI_FORM} target="_blank" rel="noreferrer" className="btn-outline mt-3 w-full">Preencher a ficha do Clube Guanxi</a>
-            )}
+            <Single label="Objetivo" options={Object.values(OBJETIVOS)} value={a.objetivo ? OBJETIVOS[a.objetivo] : ""}
+              onChange={(v) => set("objetivo", (Object.keys(OBJETIVOS) as Objetivo[]).find((k) => OBJETIVOS[k] === v) ?? "")} />
+            <p className="mt-4 text-sm text-proof">A gente opera 16 lojas próprias e compra direto de fábrica na China.</p>
           </>
         )}
-        <p className="mt-4 text-xs text-muted-foreground">Você revisa a mensagem no WhatsApp antes de enviar.</p>
-        <button type="button" onClick={() => setDone(false)} className="mt-4 text-sm text-muted-foreground underline underline-offset-4">Revisar respostas</button>
-      </div>
-    );
-  }
 
-  const [title, proof] = titles[step ?? "p1"];
+        {i === 1 && (
+          <div className="grid gap-5">
+            <label className="block">
+              <Rotulo>Qual o nome da sua empresa?</Rotulo>
+              <input className="field" placeholder={a.faturamento === SEM_EMPRESA ? "Se ainda não tem, pode deixar em branco" : "Nome da empresa ou da loja"}
+                autoComplete="organization" value={a.empresa} onChange={(e) => set("empresa", e.target.value)} />
+            </label>
+            <label className="block">
+              <Rotulo>Qual o faturamento mensal da sua empresa?</Rotulo>
+              <select className="field [color-scheme:dark]" value={a.faturamento} onChange={(e) => set("faturamento", e.target.value)}>
+                <option value="" disabled>Selecione</option>
+                {FATURAMENTO.map((f) => <option key={f}>{f}</option>)}
+              </select>
+            </label>
+            <div>
+              <Rotulo>Você já importou da China?</Rotulo>
+              <Single label="Já importou" options={JA_IMPORTOU} value={a.jaImportou} onChange={(v) => set("jaImportou", v)} />
+            </div>
+            {corte && (
+              <div>
+                <Rotulo>{perguntaCorte(a)}</Rotulo>
+                <Single label="Investimento" options={[`Sim, temos ${valorCorte()} ou mais`, `Não, temos menos que ${valorCorte()}`]}
+                  value={a.corte === "sim" ? `Sim, temos ${valorCorte()} ou mais` : a.corte === "nao" ? `Não, temos menos que ${valorCorte()}` : ""}
+                  onChange={(v) => set("corte", v.startsWith("Sim") ? "sim" : "nao")} />
+              </div>
+            )}
+            <label className="block">
+              <Rotulo opcional>O que você quer trazer ou resolver?</Rotulo>
+              <input className="field" maxLength={200} placeholder="Ex.: utilidades domésticas, margem na Shopee" value={a.quer} onChange={(e) => set("quer", e.target.value)} />
+            </label>
+          </div>
+        )}
+
+        {i === 2 && (
+          <div className="grid gap-5">
+            <label className="block">
+              <Rotulo>Qual o seu nome completo?</Rotulo>
+              <input className="field" autoComplete="name" placeholder="Seu nome completo" value={a.nome} onChange={(e) => set("nome", e.target.value)} />
+            </label>
+            <label className="block">
+              <Rotulo>WhatsApp com DDD</Rotulo>
+              <input className="field" type="tel" inputMode="numeric" autoComplete="tel-national" placeholder="(11) 91234-5678" value={a.whatsapp} onChange={(e) => set("whatsapp", maskPhone(e.target.value))} />
+              <span className="mt-1.5 block text-xs text-muted-foreground">DDD e número, sem o 55.</span>
+            </label>
+            <label className="block">
+              <Rotulo>Qual o seu e-mail?</Rotulo>
+              <input className="field" type="email" autoComplete="email" placeholder="seuemail@exemplo.com" value={a.email} onChange={(e) => set("email", e.target.value)} />
+            </label>
+            {/* campo escondido contra robô */}
+            <input type="text" tabIndex={-1} autoComplete="off" aria-hidden className="hidden" value={a.hp} onChange={(e) => set("hp", e.target.value)} />
+            <label className="flex cursor-pointer items-start gap-3 text-sm">
+              <input type="checkbox" className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--primary)]" checked={a.consentimento} onChange={(e) => set("consentimento", e.target.checked)} />
+              <span className="text-muted-foreground">
+                Autorizo a Green Margem a usar estes dados para falar comigo sobre o que eu pedi. <a href={`${base}privacidade/`} target="_blank" rel="noreferrer" className="text-primary underline underline-offset-4">Política de privacidade</a>
+              </span>
+            </label>
+          </div>
+        )}
+
+        <div className="mt-7 flex gap-3">
+          {i > 0 && <button type="button" onClick={() => setI(i - 1)} className="btn-outline"><ArrowLeft size={18} />Voltar</button>}
+          <button type="submit" disabled={!valid || enviando} className="btn-primary flex-1">
+            {i < 2 ? "Continuar" : enviando ? "Enviando..." : "Enviar"}<ArrowRight size={18} />
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+// tela final (31/10): molde da página de agradecimento da China Link, com o texto e os números verdadeiros da GM
+function Resultado({ a, enviado, revisar }: { a: Answers; enviado: boolean; revisar: () => void }) {
+  const s = saida(a);
+  const wa = whatsappUrl(buildMessage(a));
+  const semCaixa = s === "imersao-sem-caixa" || s === "importar-sem-caixa";
+
+  const titulo: Record<typeof s, string> = {
+    imersao: "Sua empresa foi classificada para o atendimento da imersão",
+    importar: "Sua empresa foi classificada para o atendimento da primeira importação",
+    vender: "Você entrou na lista da turma de 2027",
+    "imersao-sem-caixa": "A viagem ainda não é o primeiro passo",
+    "importar-sem-caixa": "Primeiro a conta, depois o pedido",
+  };
+  const texto: Record<typeof s, string> = {
+    imersao: "Pelo que você respondeu, o seu perfil é para a viagem à Canton Fair 2027 com a gente.",
+    importar: "Pelo que você respondeu, dá pra planejar a sua primeira importação com a gente.",
+    vender: "A turma de marketplace da Green Margem começa em 2027. Quem está na lista fica sabendo primeiro.",
+    "imersao-sem-caixa": `A imersão pede caixa para a viagem e para o primeiro pedido. Com menos de ${valorCorte()}, o mais seguro é começar pela conta e por um pedido menor.`,
+    "importar-sem-caixa": `Com menos de ${valorCorte()}, o risco é o caixa acabar antes do segundo pedido. Comece pela conta completa: produto, frete, impostos e câmbio.`,
+  };
+
+  const ultimo = s === "imersao" ? "Planejamento da viagem" : "Planejamento da importação";
+  const passos: [string, string?][] = [[enviado ? "Solicitação enviada" : "Diagnóstico respondido"]];
+  if (!enviado) passos.push(["Enviar o resumo no WhatsApp", "Agora"]);
+  if (s === "vender") passos.push(["Você fica na lista da turma de 2027"], ["A gente avisa quando a turma abrir"]);
+  else passos.push(["Contato do time pelo WhatsApp", enviado ? PRAZO_CONTATO : undefined], ["Diagnóstico da sua operação"], [ultimo]);
+
+  // sem o envio automático (URL vazia ou erro de rede), o WhatsApp é o passo que falta e vai logo abaixo do título
+  const adiantar = (
+    <div className={`card-gm ${enviado ? "p-6 sm:p-8" : "mt-6 border-primary bg-background p-5 sm:p-6"}`}>
+      <h4 className="heading text-2xl">{enviado ? "Quer adiantar?" : "Falta um passo"}</h4>
+      <p className="mt-2 text-muted-foreground">
+        {enviado
+          ? "Mande o seu resumo no WhatsApp. É você quem envia, e o time responde por lá."
+          : "Para o time receber o seu diagnóstico, envie o resumo no WhatsApp. A mensagem já vai pronta, e você revisa antes de mandar."}
+      </p>
+      <a href={wa} target="_blank" rel="noreferrer" className={`${enviado && semCaixa ? "btn-outline" : "btn-primary"} mt-5 w-full py-4 text-base`}>
+        <MessageCircle size={20} />{enviado ? (semCaixa ? "Quero conversar mesmo assim" : "Adiantar meu atendimento") : "Enviar meu diagnóstico no WhatsApp"}
+      </a>
+      {a.origem === "guanxi" && <a href={GUANXI_FORM} target="_blank" rel="noreferrer" className="btn-outline mt-3 w-full">Preencher a ficha do Clube Guanxi</a>}
+    </div>
+  );
+
   return (
-    <form className="card-gm p-6 sm:p-8" onSubmit={(e) => { e.preventDefault(); next(); }}>
-      <div className="mb-6">
-        <div className="mb-2 flex justify-between text-xs text-muted-foreground"><span>Pergunta {i + 1} de {steps.length}</span></div>
-        <div className="h-1.5 overflow-hidden rounded-full bg-background">
-          <div className="h-full bg-primary transition-all duration-300" style={{ width: `${((i + 1) / steps.length) * 100}%` }} />
-        </div>
-      </div>
-      <h3 className="heading mb-5 text-2xl sm:text-3xl">{title}</h3>
+    <div className="grid gap-4">
+      <div className="card-gm p-6 sm:p-8">
+        <span className="grid h-12 w-12 place-items-center rounded-full bg-primary text-primary-foreground"><Check size={26} strokeWidth={3} /></span>
+        <p className="eyebrow mt-5">{enviado ? "Diagnóstico enviado" : "Diagnóstico pronto"}</p>
+        <h3 className="heading mt-2 text-3xl sm:text-4xl">{titulo[s]}</h3>
+        <p className="mt-3 text-muted-foreground">{texto[s]}</p>
+        {!enviado && adiantar}
 
-      {step === "p1" && <Single options={Object.values(OBJ)} value={a.objetivo} onChange={(v) => set("objetivo", v)} />}
-      {step === "p2" && <Single options={P2} value={a.empresa} onChange={(v) => set("empresa", v)} />}
-      {step === "p3" && (
-        <div className="grid gap-2 sm:grid-cols-2">
-          {P3.map((o) => {
-            const on = a.canais.includes(o);
-            return (
-              <button key={o} type="button" aria-pressed={on} className="option" onClick={() => set("canais", on ? a.canais.filter((c) => c !== o) : [...a.canais, o])}>
-                <span className={`grid h-5 w-5 shrink-0 place-items-center rounded border ${on ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/40"}`}>{on && <Check size={12} strokeWidth={3} />}</span>
-                {o}
-              </button>
-            );
-          })}
-        </div>
-      )}
-      {step === "p4" && <Single options={P4} value={a.faturamento} onChange={(v) => set("faturamento", v)} />}
-      {step === "p5" && (
+        {!semCaixa && (
+          <>
+            <h4 className="heading mt-8 text-xl">O que acontece a partir de agora</h4>
+            <ol className="mt-4 grid gap-0">
+              {passos.map(([t, quando], n) => {
+                const feito = n === 0;
+                return (
+                  <li key={t} className="relative flex gap-4 pb-5 last:pb-0">
+                    {n < passos.length - 1 && <span className="absolute left-[1.05rem] top-9 bottom-0 w-px bg-border" aria-hidden />}
+                    <span className={`heading grid h-9 w-9 shrink-0 place-items-center rounded-full border text-base ${feito ? "border-primary bg-primary text-primary-foreground" : "bg-background"}`}>
+                      {feito ? <Check size={16} strokeWidth={3} /> : `0${n + 1}`}
+                    </span>
+                    <div className="pt-1.5">
+                      <p className="font-semibold">{t}</p>
+                      {(feito || quando) && <p className="text-sm text-muted-foreground">{feito ? "Concluído" : quando!.charAt(0).toUpperCase() + quando!.slice(1)}</p>}
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+            {s !== "vender" && <p className="mt-5 text-sm text-proof">Quem chama você é o time que opera 16 lojas próprias e compra direto de fábrica na China.</p>}
+          </>
+        )}
+
+        {semCaixa && (
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <a href={INSTAGRAM} target="_blank" rel="noreferrer" className="btn-primary"><Instagram size={18} />Ver o conteúdo grátis</a>
+          </div>
+        )}
+      </div>
+
+      {/* adiantar: é o lead quem manda a mensagem; nada automático da Green Margem */}
+      {enviado && adiantar}
+
+      {s === "imersao" && (
         <>
-          <Single options={P5} value={a.investimento} onChange={(v) => set("investimento", v)} />
-          <label className="mt-4 block text-sm">Que produto você quer trazer? <span className="text-muted-foreground">(opcional)</span>
-            <input className="field mt-2" value={a.produto} onChange={(e) => set("produto", e.target.value)} />
-          </label>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {[
+              [Handshake, "Negociação direta com o fabricante", "Sem intermediário no meio da conta."],
+              [TrendingUp, "Tendência antes do mercado", "Na feira você vê o que ainda não chegou às lojas daqui."],
+              [Factory, "A fábrica de perto", "Muitas fábricas ficam a poucas horas da feira. A visita mostra o que o estande esconde."],
+            ].map(([Icone, t, d]) => {
+              const I = Icone as typeof Handshake;
+              return (
+                <div key={t as string} className="card-gm p-5">
+                  <I size={22} className="text-primary" />
+                  <p className="heading mt-3 text-xl">{t as string}</p>
+                  <p className="mt-1.5 text-sm text-muted-foreground">{d as string}</p>
+                </div>
+              );
+            })}
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {CANTON_ETAPAS.map(([t, itens], n) => (
+              <div key={t} className="card-gm p-5">
+                <p className="heading text-xl"><span className="text-primary">0{n + 1}</span> {t === "Antes" ? "Pré-viagem" : t === "Durante" ? "Na feira" : "Pós-viagem"}</p>
+                <ul className="mt-3 grid gap-2">
+                  {itens.slice(0, 3).map((x) => <li key={x} className="flex gap-2 text-sm text-muted-foreground"><Check size={16} className="mt-0.5 shrink-0 text-primary" />{x}</li>)}
+                </ul>
+              </div>
+            ))}
+          </div>
         </>
       )}
-      {step === "p6" && <Single options={P6} value={a.quando} onChange={(v) => set("quando", v)} />}
-      {step === "p7" && (
-        <div className="grid gap-4">
-          <label className="text-sm">Nome *<input required autoComplete="name" className="field mt-2" value={a.nome} onChange={(e) => set("nome", e.target.value)} /></label>
-          <label className="text-sm">Empresa ou loja <span className="text-muted-foreground">(opcional)</span><input className="field mt-2" value={a.loja} onChange={(e) => set("loja", e.target.value)} /></label>
-          <label className="text-sm">WhatsApp com DDD *<input required type="tel" inputMode="numeric" autoComplete="tel" placeholder="(11) 91234-5678" className="field mt-2" value={a.whatsapp} onChange={(e) => set("whatsapp", maskPhone(e.target.value))} /></label>
-          <label className="text-sm">Quer contar mais alguma coisa? <span className="text-muted-foreground">(opcional)</span><textarea rows={3} className="field mt-2" value={a.detalhes} onChange={(e) => set("detalhes", e.target.value)} /></label>
+
+      {!semCaixa && (
+        <div className="card-gm p-6 sm:p-8">
+          <p className="eyebrow">Canton Fair 2027</p>
+          <h4 className="heading mt-2 text-2xl sm:text-3xl">A feira onde a China mostra o que fabrica</h4>
+          <ul className="mt-4 grid gap-2">
+            {[...CANTON_FATOS, "Primavera de 2027: abril e maio. A data oficial sai no site da feira."].map((f) => (
+              <li key={f} className="flex gap-2.5 text-muted-foreground"><Check size={18} className="mt-0.5 shrink-0 text-primary" />{f}</li>
+            ))}
+          </ul>
+          <a href="#canton" className="mt-5 inline-flex items-center gap-2 font-semibold text-primary hover:underline underline-offset-4">Ver o planejamento da Canton Fair<ArrowRight size={16} /></a>
+          <p className="mt-4 text-xs text-muted-foreground">Fonte: cantonfair.org.cn, 140ª edição, consultado em 31/10/2026.</p>
         </div>
       )}
 
-      {proof && <p className="mt-4 text-sm text-proof">{proof}</p>}
-
-      <div className="mt-6 flex gap-3">
-        {i > 0 && <button type="button" onClick={() => setI(i - 1)} className="btn-outline"><ArrowLeft size={18} />Voltar</button>}
-        <button type="submit" disabled={!valid} className="btn-primary flex-1">{i === steps.length - 1 ? "Ver próximo passo" : "Continuar"}<ArrowRight size={18} /></button>
-      </div>
-    </form>
+      <button type="button" onClick={revisar} className="justify-self-start text-sm text-muted-foreground underline underline-offset-4">Revisar respostas</button>
+    </div>
   );
 }
