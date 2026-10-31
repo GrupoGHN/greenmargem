@@ -6,8 +6,10 @@ export const GUANXI_FORM = "https://forms.gle/kJCmwUDveYPQdnUU9";
 // diagnóstico (31/10): as respostas vão por POST pro Apps Script (apps-script/diagnostico.gs), que grava na planilha e manda e-mail ao time.
 // Enquanto a URL estiver vazia, o lead manda o resumo pelo WhatsApp.
 export const APPS_SCRIPT_URL = "";
-// pergunta de corte da imersão e da importação (referência China Link: R$ 100 mil); o Greg ainda define o valor
-export const CORTE_INVESTIMENTO = 100_000;
+// pergunta de corte: a imersão da GM custa a partir de R$ 50 mil, fora a passagem (Greg, 31/10);
+// a primeira importação segue a referência da China Link
+export const CORTE_IMERSAO = 50_000;
+export const CORTE_IMPORTAR = 100_000;
 
 // medição: só liga (com aviso de cookies) quando um destes IDs for preenchido
 export const META_PIXEL_ID = "";

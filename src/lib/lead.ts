@@ -1,4 +1,4 @@
-import { APPS_SCRIPT_URL, CORTE_INVESTIMENTO, WHATSAPP } from "@/config/content";
+import { APPS_SCRIPT_URL, CORTE_IMERSAO, CORTE_IMPORTAR, WHATSAPP } from "@/config/content";
 
 // diagnóstico de 3 passos (31/10, molde do formulário da China Link): objetivo, empresa e contato
 export const OBJETIVOS = {
@@ -37,15 +37,17 @@ export const emptyAnswers = (): Answers => ({
 
 export const precisaCorte = (a: Answers) => a.objetivo === "imersao" || a.objetivo === "importar";
 
-export function valorCorte(v = CORTE_INVESTIMENTO) {
+export const corteDe = (a: Answers) => (a.objetivo === "imersao" ? CORTE_IMERSAO : CORTE_IMPORTAR);
+
+export function valorCorte(v: number) {
   if (v >= 1_000_000) return `R$ ${(v / 1_000_000).toLocaleString("pt-BR")} ${v >= 2_000_000 ? "milhões" : "milhão"}`;
   return `R$ ${(v / 1000).toLocaleString("pt-BR")} mil`;
 }
 
 export const perguntaCorte = (a: Answers) =>
   a.objetivo === "imersao"
-    ? `Você ou sua empresa têm a partir de ${valorCorte()} para investir na viagem de compras à China?`
-    : `Você ou sua empresa têm a partir de ${valorCorte()} para investir na primeira importação?`;
+    ? `Você ou sua empresa têm a partir de ${valorCorte(corteDe(a))} para investir na imersão na China, fora a passagem?`
+    : `Você ou sua empresa têm a partir de ${valorCorte(corteDe(a))} para investir na primeira importação?`;
 
 export type Saida = "imersao" | "imersao-sem-caixa" | "importar" | "importar-sem-caixa" | "vender";
 
@@ -70,7 +72,7 @@ export function buildMessage(a: Answers) {
   const lines = ["Olá! Fiz o diagnóstico no site da Green Margem.", `Quero: ${a.objetivo ? OBJETIVOS[a.objetivo] : ""}`];
   if (a.empresa.trim()) lines.push(`Empresa: ${a.empresa.trim()}`);
   lines.push(`Faturamento mensal: ${a.faturamento}`, `Já importei: ${a.jaImportou}`);
-  if (precisaCorte(a)) lines.push(`Tenho ${valorCorte()} ou mais para investir: ${a.corte === "sim" ? "sim" : "não"}`);
+  if (precisaCorte(a)) lines.push(`Tenho ${valorCorte(corteDe(a))} ou mais para investir: ${a.corte === "sim" ? "sim" : "não"}`);
   if (a.quer.trim()) lines.push(`Quero trazer ou resolver: ${a.quer.trim()}`);
   lines.push(`Nome: ${a.nome.trim()}`, `E-mail: ${a.email.trim()}`);
   return lines.join("\n");
@@ -85,7 +87,7 @@ export async function enviarDiagnostico(a: Answers): Promise<boolean> {
     v: 1, enviadoEm: new Date().toISOString(), pagina: location.href, origem: a.origem,
     objetivo: a.objetivo, objetivoTexto: a.objetivo ? OBJETIVOS[a.objetivo] : "",
     empresa: a.empresa.trim(), faturamento: a.faturamento, jaImportou: a.jaImportou,
-    corte: precisaCorte(a) ? a.corte : "", corteValor: CORTE_INVESTIMENTO, quer: a.quer.trim(),
+    corte: precisaCorte(a) ? a.corte : "", corteValor: precisaCorte(a) ? corteDe(a) : 0, quer: a.quer.trim(),
     nome: a.nome.trim(), whatsapp: a.whatsapp.replace(/\D/g, ""), email: a.email.trim(), consentimento: a.consentimento,
   };
   try {

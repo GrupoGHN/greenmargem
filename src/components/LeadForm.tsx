@@ -3,7 +3,7 @@ import { ArrowLeft, ArrowRight, Check, Factory, Handshake, Instagram, MessageCir
 import { CANTON_ETAPAS, CANTON_FATOS, GUANXI_FORM, INSTAGRAM, PRAZO_CONTATO } from "@/config/content";
 import {
   FATURAMENTO, JA_IMPORTOU, OBJETIVOS, SEM_EMPRESA, buildMessage, emailOk, emptyAnswers, enviarDiagnostico, maskPhone,
-  perguntaCorte, phoneOk, precisaCorte, saida, valorCorte, whatsappUrl, type Answers, type IrPara, type Objetivo,
+  corteDe, perguntaCorte, phoneOk, precisaCorte, saida, valorCorte, whatsappUrl, type Answers, type IrPara, type Objetivo,
 } from "@/lib/lead";
 import { medirLead } from "@/components/CookieBanner";
 
@@ -107,8 +107,8 @@ export function LeadForm() {
             {corte && (
               <div>
                 <Rotulo>{perguntaCorte(a)}</Rotulo>
-                <Single label="Investimento" options={[`Sim, temos ${valorCorte()} ou mais`, `Não, temos menos que ${valorCorte()}`]}
-                  value={a.corte === "sim" ? `Sim, temos ${valorCorte()} ou mais` : a.corte === "nao" ? `Não, temos menos que ${valorCorte()}` : ""}
+                <Single label="Investimento" options={[`Sim, temos ${valorCorte(corteDe(a))} ou mais`, `Não, temos menos que ${valorCorte(corteDe(a))}`]}
+                  value={a.corte === "sim" ? `Sim, temos ${valorCorte(corteDe(a))} ou mais` : a.corte === "nao" ? `Não, temos menos que ${valorCorte(corteDe(a))}` : ""}
                   onChange={(v) => set("corte", v.startsWith("Sim") ? "sim" : "nao")} />
               </div>
             )}
@@ -173,8 +173,8 @@ function Resultado({ a, enviado, revisar }: { a: Answers; enviado: boolean; revi
     imersao: "Pelo que você respondeu, o seu perfil é para a viagem à Canton Fair 2027 com a gente.",
     importar: "Pelo que você respondeu, dá pra planejar a sua primeira importação com a gente.",
     vender: "A turma de marketplace da Green Margem começa em 2027. Quem está na lista fica sabendo primeiro.",
-    "imersao-sem-caixa": `A imersão pede caixa para a viagem e para o primeiro pedido. Com menos de ${valorCorte()}, o mais seguro é começar pela conta e por um pedido menor.`,
-    "importar-sem-caixa": `Com menos de ${valorCorte()}, o risco é o caixa acabar antes do segundo pedido. Comece pela conta completa: produto, frete, impostos e câmbio.`,
+    "imersao-sem-caixa": `A imersão começa em ${valorCorte(corteDe(a))}, fora a passagem, e ainda pede caixa para o primeiro pedido. Antes da viagem, o mais seguro é começar pela conta e por um pedido menor.`,
+    "importar-sem-caixa": `Com menos de ${valorCorte(corteDe(a))}, o risco é o caixa acabar antes do segundo pedido. Comece pela conta completa: produto, frete, impostos e câmbio.`,
   };
 
   const ultimo = s === "imersao" ? "Planejamento da viagem" : "Planejamento da importação";
