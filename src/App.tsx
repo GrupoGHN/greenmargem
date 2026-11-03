@@ -46,7 +46,7 @@ const services: { group: string; items: { name: string; badge?: string; who: str
   {
     group: "Vender com margem",
     items: [
-      { name: "Diagnóstico de margem", badge: "Gratuito · 20 min", who: "Pra quem já vende.", desc: "Você mostra a operação e a gente aponta onde a sua margem está vazando hoje.", cta: "Quero o diagnóstico", action: () => goToForm("vender") },
+      { name: "Diagnóstico de margem", badge: "Gratuito · 2 min", who: "Pra quem já vende.", desc: "Você responde 4 passos e já vê onde a sua margem costuma vazar.", cta: "Quero o diagnóstico", action: () => goToForm("vender") },
       { name: "Assessoria de marketplace", who: "Pra quem quer crescer com a margem sob controle.", desc: "Plano do que ajustar primeiro e acompanhamento: precificação, ADS com lucro, anúncios e operação. Você executa com a gente do lado.", cta: "Quero a assessoria", action: () => goToForm("vender") },
       { name: "Gestão de contas", who: "Pra quem quer tirar a operação das costas.", desc: "Nossa equipe de gestores cuida das suas contas no dia a dia: anúncios, campanhas, preço e catálogo.", cta: "Quero a gestão", action: () => goToForm("vender") },
     ],
@@ -218,7 +218,7 @@ export function App() {
         <Section id="como-funciona" light>
           <Head eyebrow="Como funciona">3 passos, sem enrolação</Head>
           <ol className="grid gap-6 md:grid-cols-3 md:gap-10">
-            {[["Você faz o diagnóstico", "São 4 passos. Leva uns 2 minutos."], ["A gente chama você no WhatsApp", "E marca o diagnóstico de 20 minutos."], ["Você sai com o plano do que fazer primeiro", "Contratando a gente ou não."]].map(([t, d], n) => (
+            {[["Você faz o diagnóstico", "São 4 passos. Leva uns 2 minutos."], ["Você vê na hora o que as respostas mostram", "Fase da feira, Radar, margem por pedido."], ["Você entra no grupo da Green Margem", "É lá que a gente fala com todo mundo. Quem vai à Canton Fair fala com o time."]].map(([t, d], n) => (
               <li key={t} className="flex items-start gap-4 border-t-2 border-foreground pt-5 md:block">
                 <span className="heading destaque text-5xl md:text-6xl">{n + 1}</span>
                 <div>

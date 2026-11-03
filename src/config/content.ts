@@ -17,8 +17,9 @@ export const GA4_ID = "";
 
 export const EMPRESA = { razao: "GREEN MARGEM ASSESSORIA E TREINAMENTO LTDA", cnpj: "69.373.825/0001-58" };
 
-// prazo do primeiro contato do time pelo WhatsApp, na tela final do diagnóstico; o Greg ainda confirma se o time cumpre
-export const PRAZO_CONTATO = "em até 1 dia útil";
+// 03/11 (Greg): o time não tem gente para chamar cada lead nem faz diagnóstico por ligação.
+// Quem preenche vai para o grupo da Green Margem no WhatsApp; só a imersão com o valor de corte recebe contato individual.
+export const GRUPO_WHATSAPP = "";
 
 export const CANTON_FASES: [string, string][] = [
   ["Fase 1 · abril", "Eletrônicos, eletrodomésticos, iluminação, máquinas, ferramentas, veículos e peças."],
@@ -61,7 +62,7 @@ export const FAQ: [string, string][] = [
   ["Atendem quem é do Simples Nacional?", "Sim. A maioria dos sellers começa no Simples, e a conta muda conforme o faturamento cresce."],
   ["Preciso ter empresa para importar?", "Sim. A importação sai no CNPJ, habilitado no Radar da Receita Federal. Quem está começando costuma entrar na modalidade limitada. A gente orienta o caminho."],
   ["Quanto preciso para a primeira importação?", "Depende do produto e do frete. A gente faz a conta completa antes de você pagar qualquer fornecedor."],
-  ["Quanto custa?", "Depende do serviço e do tamanho da operação. O valor sai depois do diagnóstico, que é gratuito."],
+  ["Quanto custa?", "Depende do serviço e do tamanho da operação. O diagnóstico do site é gratuito."],
   ["Em quais marketplaces vocês atuam?", "Mercado Livre, Shopee, TikTok Shop, Shein e Temu."],
 ];
 

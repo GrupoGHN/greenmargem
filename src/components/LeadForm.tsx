@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, Factory, Handshake, Instagram, MessageCircle, TrendingUp } from "lucide-react";
-import { CANTON_ETAPAS, CANTON_FATOS, GUANXI_FORM, INSTAGRAM, PRAZO_CONTATO } from "@/config/content";
+import { ArrowLeft, ArrowRight, Check, Factory, Handshake, Instagram, MessageCircle, TrendingUp, Users } from "lucide-react";
+import { CANTON_ETAPAS, CANTON_FATOS, GRUPO_WHATSAPP, GUANXI_FORM, INSTAGRAM } from "@/config/content";
 import {
   CANAIS, CATEGORIAS, COMPRA, FATURAMENTO, HORARIO, MARGEM, NAO_VENDE, OBJETIVOS, RADAR, REGIME, SEM_EMPRESA, VIAGEM,
   achados, buildMessage, emailOk, emptyAnswers, enviarDiagnostico, maskPhone, corteDe, pergunta, perguntaCorte, phoneOk,
@@ -216,10 +216,10 @@ export function LeadForm() {
               <Rotulo>Qual o seu e-mail?</Rotulo>
               <input className="field" type="email" autoComplete="email" placeholder="seuemail@exemplo.com" value={a.email} onChange={(e) => set("email", e.target.value)} />
             </label>
-            <div>
+            {a.objetivo === "imersao" && <div>
               <Rotulo opcional>Melhor horário para o time chamar você</Rotulo>
               <Multi label="Melhor horário" options={HORARIO} value={a.horario ? [a.horario] : []} onToggle={(v) => set("horario", a.horario === v ? "" : v)} />
-            </div>
+            </div>}
             {/* campo escondido contra robô */}
             <input type="text" tabIndex={-1} autoComplete="off" aria-hidden className="hidden" value={a.hp} onChange={(e) => set("hp", e.target.value)} />
             <label className="flex cursor-pointer items-start gap-3 text-sm">
@@ -248,30 +248,27 @@ function Resultado({ a, enviado, revisar }: { a: Answers; enviado: boolean; revi
   const wa = whatsappUrl(buildMessage(a));
   const semCaixa = s === "imersao-sem-caixa" || s === "importar-sem-caixa";
 
+  // 03/11 (Greg): só a imersão com o valor de corte fala com o time; todo o resto vai para o grupo da Green Margem
+  const individual = s === "imersao";
+
   const titulo: Record<typeof s, string> = {
-    imersao: "Sua empresa foi classificada para o atendimento da imersão",
-    importar: "Sua empresa foi classificada para o atendimento da primeira importação",
-    vender: "Você entrou na lista da turma de 2027",
+    imersao: "Sua empresa foi classificada para a imersão",
+    importar: "Seu diagnóstico está pronto",
+    vender: "Seu diagnóstico está pronto",
     "imersao-sem-caixa": "A viagem ainda não é o primeiro passo",
     "importar-sem-caixa": "Primeiro a conta, depois o pedido",
   };
   const texto: Record<typeof s, string> = {
-    imersao: "Pelo que você respondeu, o seu perfil é para a viagem à Canton Fair 2027 com a gente.",
-    importar: "Pelo que você respondeu, dá pra planejar a sua primeira importação com a gente.",
-    vender: "A turma de marketplace da Green Margem começa em 2027. Quem está na lista fica sabendo primeiro.",
+    imersao: "Pelo que você respondeu, o seu perfil é para a viagem à Canton Fair 2027 com a gente. Quem fala com você é o time, pelo WhatsApp.",
+    importar: `Pelo que você respondeu, dá para planejar a sua importação. Fornecedor, custo e Canton Fair, a gente conversa ${GRUPO_WHATSAPP ? "no grupo da Green Margem, com todo mundo junto" : "no Instagram da Green Margem"}.`,
+    vender: `A turma de marketplace da Green Margem começa em 2027. Até lá, conteúdo, avisos e a abertura da turma saem primeiro ${GRUPO_WHATSAPP ? "no grupo" : "no Instagram"}.`,
     "imersao-sem-caixa": `A imersão começa em ${valorCorte(corteDe(a))}, fora a passagem, e ainda pede caixa para o primeiro pedido. Antes da viagem, o mais seguro é começar pela conta e por um pedido menor.`,
     "importar-sem-caixa": `Com menos de ${valorCorte(corteDe(a))}, o risco é o caixa acabar antes do segundo pedido. Comece pela conta completa: produto, frete, impostos e câmbio.`,
   };
 
-  const ultimo = s === "imersao" ? "Planejamento da viagem" : "Planejamento da importação";
   const passos: [string, string?][] = [[enviado ? "Solicitação enviada" : "Diagnóstico respondido"]];
   if (!enviado) passos.push(["Enviar o resumo no WhatsApp", "Agora"]);
-  if (s === "vender") passos.push(["Você fica na lista da turma de 2027"], ["A gente avisa quando a turma abrir"]);
-  else {
-    passos.push(["Contato do time pelo WhatsApp", enviado ? PRAZO_CONTATO : undefined], ["Diagnóstico da sua operação"]);
-    if (pergunta.radar(a) && a.radar !== RADAR[0]) passos.push(["Habilitação da empresa no Radar"]);
-    passos.push([ultimo]);
-  }
+  passos.push(["Conversa com o time pelo WhatsApp"], ["Condições e planejamento da viagem"]);
   const vistos = achados(a);
   const quadro = vistos.length > 0 && (
     <div className="card-gm p-6 sm:p-8">
@@ -297,9 +294,27 @@ function Resultado({ a, enviado, revisar }: { a: Answers; enviado: boolean; revi
           ? "Mande o seu resumo no WhatsApp. É você quem envia, e o time responde por lá."
           : "Para o time receber o seu diagnóstico, envie o resumo no WhatsApp. A mensagem já vai pronta, e você revisa antes de mandar."}
       </p>
-      <a href={wa} target="_blank" rel="noreferrer" className={`${enviado && semCaixa ? "btn-outline" : "btn-primary"} mt-5 w-full py-4 text-base`}>
-        <MessageCircle size={20} />{enviado ? (semCaixa ? "Quero conversar mesmo assim" : "Adiantar meu atendimento") : "Enviar meu diagnóstico no WhatsApp"}
+      <a href={wa} target="_blank" rel="noreferrer" className="btn-primary mt-5 w-full py-4 text-base">
+        <MessageCircle size={20} />{enviado ? "Adiantar meu atendimento" : "Enviar meu diagnóstico no WhatsApp"}
       </a>
+      {GRUPO_WHATSAPP && <a href={GRUPO_WHATSAPP} target="_blank" rel="noreferrer" className="btn-outline mt-3 w-full"><Users size={18} />Entrar também no grupo da Green Margem</a>}
+      {a.origem === "guanxi" && <a href={GUANXI_FORM} target="_blank" rel="noreferrer" className="btn-outline mt-3 w-full">Preencher a ficha do Clube Guanxi</a>}
+    </div>
+  );
+
+  // quem não é da imersão: o passo seguinte é o grupo (sem link do grupo, cai no Instagram)
+  const grupo = (
+    <div className="card-gm mt-6 border-primary bg-background p-5 sm:p-6">
+      <h4 className="heading text-2xl">{GRUPO_WHATSAPP ? "Entre no grupo da Green Margem" : "Acompanhe a Green Margem"}</h4>
+      <p className="mt-2 text-muted-foreground">
+        {GRUPO_WHATSAPP
+          ? "É lá que a gente fala com todo mundo: conteúdo, avisos da Canton Fair e a abertura da turma de 2027."
+          : "No Instagram sai o conteúdo, os avisos da Canton Fair e a abertura da turma de 2027."}
+      </p>
+      {GRUPO_WHATSAPP
+        ? <a href={GRUPO_WHATSAPP} target="_blank" rel="noreferrer" className="btn-primary mt-5 w-full py-4 text-base"><Users size={20} />Entrar no grupo</a>
+        : <a href={INSTAGRAM} target="_blank" rel="noreferrer" className="btn-primary mt-5 w-full py-4 text-base"><Instagram size={20} />Seguir a @greenmargem</a>}
+      {GRUPO_WHATSAPP && semCaixa && <a href={INSTAGRAM} target="_blank" rel="noreferrer" className="btn-outline mt-3 w-full"><Instagram size={18} />Ver o conteúdo grátis</a>}
       {a.origem === "guanxi" && <a href={GUANXI_FORM} target="_blank" rel="noreferrer" className="btn-outline mt-3 w-full">Preencher a ficha do Clube Guanxi</a>}
     </div>
   );
@@ -308,12 +323,12 @@ function Resultado({ a, enviado, revisar }: { a: Answers; enviado: boolean; revi
     <div className="grid gap-4">
       <div className="card-gm p-6 sm:p-8">
         <span className="grid h-12 w-12 place-items-center rounded-full bg-primary text-primary-foreground"><Check size={26} strokeWidth={3} /></span>
-        <p className="eyebrow mt-5">{enviado ? "Diagnóstico enviado" : "Diagnóstico pronto"}</p>
+        <p className="eyebrow mt-5">{individual && enviado ? "Diagnóstico enviado" : "Diagnóstico pronto"}</p>
         <h3 className="heading mt-2 text-3xl sm:text-4xl">{titulo[s]}</h3>
         <p className="mt-3 text-muted-foreground">{texto[s]}</p>
-        {!enviado && adiantar}
+        {individual ? !enviado && adiantar : grupo}
 
-        {!semCaixa && (
+        {individual && (
           <>
             <h4 className="heading mt-8 text-xl">O que acontece a partir de agora</h4>
             <ol className="mt-4 grid gap-0">
@@ -333,21 +348,15 @@ function Resultado({ a, enviado, revisar }: { a: Answers; enviado: boolean; revi
                 );
               })}
             </ol>
-            {s !== "vender" && <p className="mt-5 text-sm text-proof">Quem chama você é o time que opera 16 lojas próprias e compra direto de fábrica na China.</p>}
+            <p className="mt-5 text-sm text-proof">Quem fala com você é o time que opera 16 lojas próprias e compra direto de fábrica na China.</p>
           </>
-        )}
-
-        {semCaixa && (
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <a href={INSTAGRAM} target="_blank" rel="noreferrer" className="btn-primary"><Instagram size={18} />Ver o conteúdo grátis</a>
-          </div>
         )}
       </div>
 
       {quadro}
 
       {/* adiantar: é o lead quem manda a mensagem; nada automático da Green Margem */}
-      {enviado && adiantar}
+      {individual && enviado && adiantar}
 
       {s === "imersao" && (
         <>
