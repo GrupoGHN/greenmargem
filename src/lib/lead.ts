@@ -64,6 +64,10 @@ export const emptyAnswers = (): Answers => ({
 export const semEmpresa = (a: Answers) => a.faturamento === SEM_EMPRESA;
 export const vende = (a: Answers) => a.canais.some((c) => c !== NAO_VENDE);
 
+// 03/11 (Greg): assessoria e gestão ficam "em breve"; o "Tenho interesse" do cartão traz a pessoa para o diagnóstico com esta origem
+export const TURMAS: Record<string, string> = { "turma-assessoria": "Assessoria de marketplace", "turma-gestao": "Gestão de contas" };
+export const turmaDe = (a: Answers) => TURMAS[a.origem] ?? "";
+
 // quais perguntas do passo 3 aparecem; o formulário e a validação leem daqui
 export const pergunta = {
   categoria: (a: Answers) => a.objetivo === "imersao" || a.objetivo === "importar",
@@ -140,6 +144,7 @@ export const emailOk = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.tri
 
 export function buildMessage(a: Answers) {
   const lines = ["Olá! Fiz o diagnóstico no site da Green Margem.", `Quero: ${a.objetivo ? OBJETIVOS[a.objetivo] : ""}`];
+  if (turmaDe(a)) lines.push(`Tenho interesse na próxima turma: ${turmaDe(a)}`);
   if (a.empresa.trim()) lines.push(`Empresa: ${a.empresa.trim()}`);
   lines.push(`Faturamento mensal: ${a.faturamento}`, `Vendo em: ${a.canais.join(", ")}`);
   if (a.compra) lines.push(`De onde vem o produto: ${a.compra.charAt(0).toLowerCase() + a.compra.slice(1)}`);

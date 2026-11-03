@@ -4,7 +4,7 @@ import { CANTON_ETAPAS, CANTON_FATOS, GRUPO_WHATSAPP, GUANXI_FORM, INSTAGRAM } f
 import {
   CANAIS, CATEGORIAS, COMPRA, FATURAMENTO, HORARIO, MARGEM, NAO_VENDE, OBJETIVOS, RADAR, REGIME, SEM_EMPRESA, VIAGEM,
   achados, buildMessage, emailOk, emptyAnswers, enviarDiagnostico, maskPhone, corteDe, pergunta, perguntaCorte, phoneOk,
-  precisaCorte, saida, semEmpresa, valorCorte, vende, whatsappUrl, type Answers, type IrPara, type Objetivo,
+  precisaCorte, saida, semEmpresa, turmaDe, valorCorte, vende, whatsappUrl, type Answers, type IrPara, type Objetivo,
 } from "@/lib/lead";
 import { medirLead } from "@/components/CookieBanner";
 
@@ -118,6 +118,7 @@ export function LeadForm() {
 
         {i === 0 && (
           <>
+            {turmaDe(a) && <p className="mb-4 border-l-2 border-primary pl-3 text-sm font-medium">Inscrição na próxima turma de {turmaDe(a)}, em 2027.</p>}
             <Single label="Objetivo" options={Object.values(OBJETIVOS)} value={a.objetivo ? OBJETIVOS[a.objetivo] : ""}
               onChange={(v) => set("objetivo", (Object.keys(OBJETIVOS) as Objetivo[]).find((k) => OBJETIVOS[k] === v) ?? "")} />
             <p className="mt-4 text-sm text-proof">A gente opera 16 lojas próprias e compra direto de fábrica na China.</p>
@@ -254,7 +255,7 @@ function Resultado({ a, enviado, revisar }: { a: Answers; enviado: boolean; revi
   const titulo: Record<typeof s, string> = {
     imersao: "Sua empresa foi classificada para a imersão",
     importar: "Seu diagnóstico está pronto",
-    vender: "Seu diagnóstico está pronto",
+    vender: turmaDe(a) && enviado ? "Você está na lista da próxima turma" : "Seu diagnóstico está pronto",
     "imersao-sem-caixa": "A viagem ainda não é o primeiro passo",
     "importar-sem-caixa": "Primeiro a conta, depois o pedido",
   };

@@ -42,13 +42,14 @@ function Head({ eyebrow, children }: { eyebrow?: string; children: ReactNode }) 
   );
 }
 
-const services: { group: string; items: { name: string; badge?: string; who: string; desc: string; cta: string; action: () => void; external?: boolean }[] }[] = [
+// breve (03/11, Greg): o serviço ainda não roda; o cartão diz "em breve" e o "Tenho interesse" leva ao diagnóstico
+const services: { group: string; items: { name: string; badge?: string; breve?: boolean; who: string; desc: string; cta: string; action: () => void; external?: boolean }[] }[] = [
   {
     group: "Vender com margem",
     items: [
       { name: "Diagnóstico de margem", badge: "Gratuito · 2 min", who: "Pra quem já vende.", desc: "Você responde 4 passos e já vê onde a sua margem costuma vazar.", cta: "Quero o diagnóstico", action: () => goToForm("vender") },
-      { name: "Assessoria de marketplace", who: "Pra quem quer crescer com a margem sob controle.", desc: "Plano do que ajustar primeiro e acompanhamento: precificação, ADS com lucro, anúncios e operação. Você executa com a gente do lado.", cta: "Quero a assessoria", action: () => goToForm("vender") },
-      { name: "Gestão de contas", who: "Pra quem quer tirar a operação das costas.", desc: "Nossa equipe de gestores cuida das suas contas no dia a dia: anúncios, campanhas, preço e catálogo.", cta: "Quero a gestão", action: () => goToForm("vender") },
+      { name: "Assessoria de marketplace", breve: true, who: "Pra quem quer crescer com a margem sob controle.", desc: "Plano do que ajustar primeiro e acompanhamento: precificação, ADS com lucro, anúncios e operação. Você executa com a gente do lado.", cta: "Tenho interesse", action: () => goToForm("vender", "turma-assessoria") },
+      { name: "Gestão de contas", breve: true, who: "Pra quem quer tirar a operação das costas.", desc: "A gente cuida das suas contas no dia a dia: anúncios, campanhas, preço e catálogo.", cta: "Tenho interesse", action: () => goToForm("vender", "turma-gestao") },
     ],
   },
   {
@@ -176,9 +177,11 @@ export function App() {
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <h3 className="heading text-2xl">{s.name}</h3>
                   {s.badge && <span className="rounded-full border border-primary/50 px-2.5 py-0.5 text-xs font-semibold text-primary">{s.badge}</span>}
+                  {s.breve && <span className="rounded-full border px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">Em breve</span>}
                 </div>
                 <p className="mt-2 text-sm font-medium text-foreground/80">{s.who}</p>
                 <p className="mt-3 flex-1 text-muted-foreground">{s.desc}</p>
+                {s.breve && <p className="mt-4 border-t pt-3 text-sm font-medium text-foreground/80">Inscrições abertas para a próxima turma, em 2027.</p>}
                 <button onClick={s.action} className="mt-5 inline-flex items-center gap-2 self-start font-semibold text-primary hover:underline underline-offset-4">
                   {s.cta}{s.external ? <ExternalLink size={16} /> : <ArrowRight size={16} />}
                 </button>
