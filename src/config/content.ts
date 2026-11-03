@@ -5,7 +5,8 @@ export const GUANXI_FORM = "https://forms.gle/kJCmwUDveYPQdnUU9";
 
 // diagnóstico (31/10): as respostas vão por POST pro Apps Script (apps-script/diagnostico.gs), que grava na planilha e manda e-mail ao time.
 // Enquanto a URL estiver vazia, o lead manda o resumo pelo WhatsApp.
-export const APPS_SCRIPT_URL = "";
+// 03/11: app da Web "Diagnóstico GM", preso à planilha "Green Margem · Respostas dos formulários", aba "Diagnóstico site"
+export const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzv3LPxqtItSspLDXSAm-ODxuzL_Z-TYedXpPYlo5iP1bBsrZ8rSIAG4A7IpMrd0W9N/exec";
 // pergunta de corte: a imersão da GM custa a partir de R$ 50 mil, fora a passagem (Greg, 31/10);
 // a primeira importação segue a referência da China Link
 export const CORTE_IMERSAO = 50_000;
