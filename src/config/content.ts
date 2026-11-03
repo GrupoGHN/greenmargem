@@ -19,7 +19,7 @@ export const EMPRESA = { razao: "GREEN MARGEM ASSESSORIA E TREINAMENTO LTDA", cn
 
 // 03/11 (Greg): o time não tem gente para chamar cada lead nem faz diagnóstico por ligação.
 // Quem preenche vai para o grupo da Green Margem no WhatsApp; só a imersão com o valor de corte recebe contato individual.
-export const GRUPO_WHATSAPP = "";
+export const GRUPO_WHATSAPP = "https://chat.whatsapp.com/JEX5gskrv9IGANv3EkPRq4";
 
 export const CANTON_FASES: [string, string][] = [
   ["Fase 1 · abril", "Eletrônicos, eletrodomésticos, iluminação, máquinas, ferramentas, veículos e peças."],
