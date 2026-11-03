@@ -22,18 +22,33 @@
   --font-sans: "Barlow", system-ui, sans-serif;
 }
 
+/* 03/11: paleta mais contida (premium). O verde da marca fica no botão e em detalhe; palavra em destaque usa o verde claro */
 :root {
-  --radius: 0.75rem;
-  --background: #08100b;
-  --surface: #0d1a12;
-  --card: #112217;
-  --foreground: oklch(0.96 0.01 150);
-  --muted-foreground: oklch(0.75 0.02 150);
-  --primary: #2bc24b;
-  --primary-foreground: #06120a;
-  --proof: color-mix(in oklab, #2bc24b 60%, #08100b);
+  --radius: 0.5rem;
+  --background: #070b08;
+  --surface: #0b120d;
+  --card: #0f1712;
+  --foreground: #f1efe8;
+  --muted-foreground: #a3aba4;
+  --primary: #33b257;
+  --primary-foreground: #04100a;
+  --accent-text: #9fd8b0;
+  --proof: color-mix(in oklab, #33b257 60%, #070b08);
   --alert: #ff5143;
   --border: rgba(255, 255, 255, 0.08);
+}
+
+/* seção clara, no ritmo de revista: as cores dos componentes vêm das variáveis, então trocam sozinhas */
+.sec-light {
+  --background: #f2efe7;
+  --surface: #ebe7dd;
+  --card: #ffffff;
+  --foreground: #111613;
+  --muted-foreground: #545b55;
+  --accent-text: #1f7a3d;
+  --border: rgba(17, 22, 19, 0.1);
+  background: var(--background);
+  color: var(--foreground);
 }
 
 @layer base {
@@ -48,17 +63,27 @@
 
 @utility heading {
   font-family: var(--font-display);
-  font-weight: 700;
-  text-transform: uppercase;
-  line-height: 0.95;
-  letter-spacing: 0.005em;
-}
-@utility eyebrow {
-  font-size: 0.8rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.16em;
-  color: var(--primary);
+  line-height: 0.98;
+  letter-spacing: 0.012em;
+}
+@utility eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--muted-foreground);
+  &::before { content: ""; width: 1.75rem; height: 1px; background: var(--primary); }
+}
+@utility destaque {
+  color: var(--accent-text);
+}
+@utility img-grade {
+  filter: saturate(0.9) contrast(1.06);
 }
 @utility grid-paper {
   background-image:
@@ -68,14 +93,14 @@
   mask-image: linear-gradient(to bottom, black 40%, transparent);
 }
 @utility card-gm {
-  background: var(--card);
+  background: color-mix(in oklab, var(--card) 70%, transparent);
   border: 1px solid var(--border);
   border-radius: var(--radius);
 }
 @utility btn-primary {
   display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
   background: var(--primary); color: var(--primary-foreground);
-  font-weight: 600; border-radius: 0.5rem; padding: 0.85rem 1.4rem;
+  font-weight: 600; border-radius: 0.375rem; padding: 0.85rem 1.4rem;
   transition: filter 0.2s, transform 0.2s;
   &:hover { filter: brightness(1.1); }
   &:active { transform: translateY(1px); }
@@ -83,10 +108,10 @@
 }
 @utility btn-outline {
   display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
-  border: 1px solid color-mix(in oklab, var(--primary) 60%, transparent); color: var(--foreground);
-  font-weight: 600; border-radius: 0.5rem; padding: 0.85rem 1.4rem;
+  border: 1px solid color-mix(in oklab, var(--foreground) 28%, transparent); color: var(--foreground);
+  font-weight: 600; border-radius: 0.375rem; padding: 0.85rem 1.4rem;
   transition: background 0.2s;
-  &:hover { background: color-mix(in oklab, var(--primary) 12%, transparent); }
+  &:hover { background: color-mix(in oklab, var(--foreground) 7%, transparent); }
 }
 @utility tab {
   flex: 1 1 0; white-space: nowrap; border-radius: 0.5rem; padding: 0.7rem 0.9rem;

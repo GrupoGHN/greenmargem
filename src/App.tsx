@@ -13,9 +13,10 @@ const logo = asset("logo-wide.png");
 // o /canton continua rolando até a seção da feira, com a imersão já marcada no diagnóstico
 const ATALHOS: Record<string, Objetivo> = { diagnostico: "vender", importar: "importar", guanxi: "importar", canton: "imersao" };
 
-function Section({ id, alt, children }: { id?: string; alt?: boolean; children: ReactNode }) {
+// light: seção clara no meio das escuras (ritmo de revista, 03/11)
+function Section({ id, alt, light, children }: { id?: string; alt?: boolean; light?: boolean; children: ReactNode }) {
   return (
-    <section id={id} className={`px-5 py-12 sm:py-24 ${alt ? "bg-surface" : ""}`}>
+    <section id={id} className={`px-5 py-14 sm:py-28 ${light ? "sec-light" : alt ? "bg-surface" : ""}`}>
       <div className="mx-auto max-w-6xl">{children}</div>
     </section>
   );
@@ -89,7 +90,7 @@ export function App() {
   return (
     <div className="min-h-screen">
       <header className="fixed inset-x-0 top-0 z-40 border-b bg-background/85 backdrop-blur">
-        <p className="bg-primary px-3 py-1.5 text-center text-[0.66rem] font-semibold uppercase tracking-[0.03em] text-primary-foreground sm:text-xs sm:tracking-[0.12em]">Para empresas que vendem ou querem comprar direto da China</p>
+        <p className="border-b bg-surface px-3 py-1.5 text-center text-[0.66rem] font-medium uppercase tracking-[0.06em] text-muted-foreground sm:text-[0.7rem] sm:tracking-[0.2em]">Para empresas que vendem ou querem comprar direto da China</p>
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-5">
           <a href="#topo" aria-label="Green Margem, início"><img src={logo} alt="Green Margem" className="h-9 w-auto" /></a>
           <nav className="hidden items-center gap-7 text-sm text-muted-foreground lg:flex">
@@ -103,15 +104,19 @@ export function App() {
 
       <main>
         {/* Hero */}
-        <section id="topo" className="relative overflow-hidden px-5 pb-12 pt-32 sm:pb-24 sm:pt-48">
-          {/* foto real do galpão: no desktop fica por trás, à direita do texto; no celular entra depois dos botões (fardo branco atrás do título apagava a letra) */}
-          <img src={asset("operacao/hero-galpao.webp")} alt="" aria-hidden fetchPriority="high" className="pointer-events-none absolute inset-0 hidden h-full w-full object-cover object-[70%_50%] opacity-80 sm:block" />
-          <div className="pointer-events-none absolute inset-0 hidden bg-gradient-to-r from-background via-background/90 to-background/20 sm:block" aria-hidden />
-          <div className="grid-paper pointer-events-none absolute inset-0 sm:hidden" aria-hidden />
-          <div className="relative mx-auto max-w-6xl">
-            <p className="eyebrow mb-5">Assessoria de marketplace e importação</p>
-            <h1 className="heading max-w-4xl text-5xl sm:text-7xl lg:text-8xl">
-              Margem se faz em dois lugares: <span className="text-primary">na venda</span> e <span className="text-primary">na compra</span>.
+        {/* 03/11: a operação grande e nítida (o Greg achou os fardos no canto pequenos demais).
+            Celular: foto em cima, texto embaixo. Desktop: foto ocupa a direita da tela, texto à esquerda */}
+        <section id="topo" className="relative overflow-hidden">
+          <div className="relative mt-[6.75rem] h-[44svh] sm:absolute sm:inset-y-0 sm:right-0 sm:mt-0 sm:h-auto sm:w-[66%]">
+            <img src={asset("operacao/hero-operacao.webp")} alt="Fardos chegando entre as estantes do galpão da operação" fetchPriority="high" className="img-grade h-full w-full object-cover object-[55%_30%] sm:object-[60%_40%]" />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent sm:bg-[linear-gradient(90deg,var(--background)_0%,color-mix(in_oklab,var(--background)_80%,transparent)_32%,transparent_68%)]" aria-hidden />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 hidden h-48 bg-gradient-to-t from-background to-transparent sm:block" aria-hidden />
+          </div>
+          <div className="relative -mt-14 px-5 pb-10 sm:mt-0 sm:flex sm:min-h-[100svh] sm:items-center sm:pt-36 sm:pb-16">
+          <div className="mx-auto w-full max-w-6xl">
+            <p className="eyebrow mb-6">Assessoria de marketplace e importação</p>
+            <h1 className="heading max-w-3xl text-5xl sm:text-7xl lg:text-[5.5rem]">
+              Margem se faz em dois lugares: <span className="destaque">na venda</span> e <span className="destaque">na compra</span>.
             </h1>
             <p className="mt-6 max-w-2xl text-lg text-muted-foreground sm:text-xl">
               A gente opera 16 lojas próprias em 5 marketplaces e compra direto de fábrica na China. É isso que a gente leva pra sua operação: vender com margem e comprar melhor.
@@ -120,15 +125,16 @@ export function App() {
               <button onClick={() => goToForm()} className="btn-primary text-base">Fazer o diagnóstico gratuito<ArrowRight size={18} /></button>
               <button onClick={() => goToForm("imersao")} className="btn-outline text-base">Quero ir à Canton Fair 2027</button>
             </div>
-            <img src={asset("operacao/hero-galpao.webp")} alt="Fardos e prateleiras no galpão da operação" className="mt-8 aspect-[16/9] w-full rounded-xl border object-cover sm:hidden" />
-            <div className="mt-3 grid grid-cols-2 gap-px overflow-hidden rounded-xl border bg-border sm:mt-14 sm:grid-cols-4">
+            {/* números em linha, sem caixa (03/11) */}
+            <div className="mt-10 grid grid-cols-2 gap-y-5 border-t pt-6 sm:mt-14 sm:grid-cols-4">
               {["16 lojas próprias", "5 marketplaces", "Compra direta de fábrica na China", "Na Canton Fair 2027"].map((t) => (
-                <div key={t} className="flex items-center bg-background p-4 sm:p-5">
-                  <span className="heading text-xl leading-tight sm:text-2xl">{t}</span>
+                <div key={t} className="border-l pl-4 pr-3">
+                  <span className="heading text-lg leading-tight sm:text-2xl">{t}</span>
                 </div>
               ))}
             </div>
             <p className="mt-5 text-sm tracking-wide text-muted-foreground">{MARKETPLACES.join(" · ")}</p>
+          </div>
           </div>
         </section>
 
@@ -138,8 +144,8 @@ export function App() {
           <p className="-mt-4 mb-8 max-w-2xl text-lg text-muted-foreground">Não é teoria. São 16 lojas próprias em 5 marketplaces, com estoque, separação e expedição, e compra direta de fábrica na China.</p>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {OPERACAO.map((o) => (
-              <figure key={o.foto} className="relative overflow-hidden rounded-xl border">
-                <img src={asset(o.foto)} alt={o.legenda} loading="lazy" className="aspect-[4/5] w-full object-cover" />
+              <figure key={o.foto} className="relative overflow-hidden rounded-md">
+                <img src={asset(o.foto)} alt={o.legenda} loading="lazy" className="img-grade aspect-[4/5] w-full object-cover" />
                 <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/90 to-transparent px-3 pb-3 pt-10 text-sm font-semibold">{o.legenda}</figcaption>
               </figure>
             ))}
@@ -147,17 +153,17 @@ export function App() {
         </Section>
 
         {/* Problema */}
-        <Section>
+        <Section light>
           <Head eyebrow="Por que a margem some">A maioria olha só um lado da conta</Head>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-8 md:grid-cols-2 md:gap-12">
             {[["Quem só cuida do anúncio", "Vende mais e lucra igual. Comissão, frete, ADS e imposto comem a diferença."], ["Quem só cuida da compra", "Traz o produto barato e erra no preço, no estoque e no marketplace."]].map(([t, d]) => (
-              <div key={t} className="card-gm p-6 sm:p-8">
+              <div key={t} className="border-t-2 border-foreground pt-5">
                 <h3 className="heading text-2xl sm:text-3xl">{t}</h3>
-                <p className="mt-3 text-muted-foreground">{d}</p>
+                <p className="mt-3 text-lg text-muted-foreground">{d}</p>
               </div>
             ))}
           </div>
-          <p className="heading mt-10 border-l-4 border-primary pl-5 text-3xl sm:text-4xl">A Green Margem cuida dos <span className="text-primary">dois lados</span> da mesma conta.</p>
+          <p className="heading mt-12 border-l-4 border-primary pl-5 text-3xl sm:text-4xl">A Green Margem cuida dos <span className="destaque">dois lados</span> da mesma conta.</p>
         </Section>
 
         {/* Serviços */}
@@ -188,7 +194,7 @@ export function App() {
           <Tabs labels={fases.map(([t]) => t.split(" · ")[0])} value={fase} onChange={setFase} className="mt-8 mb-4 md:hidden" />
           <div className="grid gap-4 md:mt-10 md:grid-cols-3">
             {fases.map(([t, d], n) => (
-              <div key={t} className={`card-gm p-6 ${n === fase ? "" : "hidden md:block"}`}><h3 className="heading text-2xl text-primary">{t}</h3><p className="mt-3 text-muted-foreground">{d}</p></div>
+              <div key={t} className={`card-gm p-6 ${n === fase ? "" : "hidden md:block"}`}><h3 className="heading destaque text-2xl">{t}</h3><p className="mt-3 text-muted-foreground">{d}</p></div>
             ))}
           </div>
           <p className="mt-4 text-sm text-muted-foreground">As datas oficiais de 2027 saem no site da feira. A gente confirma com você antes de comprar a passagem.</p>
@@ -198,7 +204,7 @@ export function App() {
           <div className="grid gap-4 md:grid-cols-3">
             {timeline.map(([t, items], n) => (
               <div key={t} className={`card-gm p-6 ${n === etapa ? "" : "hidden md:block"}`}>
-                <div className="flex items-baseline gap-3 border-b pb-4"><span className="heading text-4xl text-primary">0{n + 1}</span><span className="heading text-3xl">{t}</span></div>
+                <div className="flex items-baseline gap-3 border-b pb-4"><span className="heading destaque text-4xl">0{n + 1}</span><span className="heading text-3xl">{t}</span></div>
                 <ul className="mt-4 grid gap-2.5">
                   {items.map((i) => <li key={i} className="flex gap-2.5 text-muted-foreground"><Check size={18} className="mt-0.5 shrink-0 text-primary" />{i}</li>)}
                 </ul>
@@ -209,12 +215,12 @@ export function App() {
         </Section>
 
         {/* Como funciona */}
-        <Section id="como-funciona" alt>
+        <Section id="como-funciona" light>
           <Head eyebrow="Como funciona">3 passos, sem enrolação</Head>
-          <ol className="grid gap-3 md:grid-cols-3 md:gap-4">
+          <ol className="grid gap-6 md:grid-cols-3 md:gap-10">
             {[["Você faz o diagnóstico", "São 3 passos. Leva menos de 1 minuto."], ["A gente chama você no WhatsApp", "E marca o diagnóstico de 20 minutos."], ["Você sai com o plano do que fazer primeiro", "Contratando a gente ou não."]].map(([t, d], n) => (
-              <li key={t} className="card-gm flex items-start gap-4 p-5 md:block md:p-6">
-                <span className="heading text-5xl text-primary md:text-6xl">{n + 1}</span>
+              <li key={t} className="flex items-start gap-4 border-t-2 border-foreground pt-5 md:block">
+                <span className="heading destaque text-5xl md:text-6xl">{n + 1}</span>
                 <div>
                   <h3 className="heading text-2xl md:mt-3">{t}</h3>
                   <p className="mt-2 text-muted-foreground">{d}</p>
@@ -235,7 +241,7 @@ export function App() {
             {people.map((p) => (
               <article key={p.name} className="card-gm flex overflow-hidden sm:block">
                 <div className="w-32 shrink-0 bg-background sm:aspect-[4/5] sm:w-auto">
-                  <img src={p.photo} alt={p.name} loading="lazy" className="h-full w-full object-cover object-[50%_20%]" />
+                  <img src={p.photo} alt={p.name} loading="lazy" className="img-grade h-full w-full object-cover object-[50%_20%]" />
                 </div>
                 <div className="p-4 sm:p-6">
                   <p className="eyebrow">{p.role}</p>
@@ -248,11 +254,11 @@ export function App() {
         </Section>
 
         {/* Pra quem é */}
-        <Section alt>
+        <Section light>
           <Head eyebrow="Pra quem é">É pra você?</Head>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="card-gm p-6 sm:p-8">
-              <h3 className="heading text-3xl text-primary">É pra você se:</h3>
+              <h3 className="heading destaque text-3xl">É pra você se:</h3>
               <ul className="mt-5 grid gap-3">
                 {["Já vende em marketplace e quer crescer sem perder margem.", "Fatura bem, mas não sabe quanto sobra por produto.", "Quer ter o próprio produto e parar de comprar de quem compra da China.", "Vai à Canton Fair e quer voltar com fornecedor fechado."].map((t) => (
                   <li key={t} className="flex gap-3"><Check size={20} className="mt-0.5 shrink-0 text-primary" />{t}</li>
