@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Factory, Handshake, Instagram, MessageCircle, TrendingUp } from "lucide-react";
 import { CANTON_ETAPAS, CANTON_FATOS, GUANXI_FORM, INSTAGRAM, PRAZO_CONTATO } from "@/config/content";
 import {
-  FATURAMENTO, JA_IMPORTOU, OBJETIVOS, SEM_EMPRESA, buildMessage, emailOk, emptyAnswers, enviarDiagnostico, maskPhone,
-  corteDe, perguntaCorte, phoneOk, precisaCorte, saida, valorCorte, whatsappUrl, type Answers, type IrPara, type Objetivo,
+  CANAIS, CATEGORIAS, COMPRA, FATURAMENTO, HORARIO, MARGEM, NAO_VENDE, OBJETIVOS, RADAR, REGIME, SEM_EMPRESA, VIAGEM,
+  achados, buildMessage, emailOk, emptyAnswers, enviarDiagnostico, maskPhone, corteDe, pergunta, perguntaCorte, phoneOk,
+  precisaCorte, saida, semEmpresa, valorCorte, vende, whatsappUrl, type Answers, type IrPara, type Objetivo,
 } from "@/lib/lead";
 import { medirLead } from "@/components/CookieBanner";
 
@@ -24,8 +25,28 @@ function Single({ options, value, onChange, label }: { options: string[]; value:
   );
 }
 
-const Rotulo = ({ children, opcional }: { children: string; opcional?: boolean }) => (
-  <span className="mb-2 block text-sm font-semibold">{children}{opcional && <span className="font-normal text-muted-foreground"> (opcional)</span>}</span>
+// várias respostas: botões que ligam e desligam, em linha, rápidos de tocar no celular
+function Multi({ options, value, onToggle, label }: { options: string[]; value: string[]; onToggle: (v: string) => void; label?: string }) {
+  return (
+    <div role="group" aria-label={label} className="flex flex-wrap gap-2">
+      {options.map((o) => {
+        const on = value.includes(o);
+        return (
+          <button key={o} type="button" aria-pressed={on} onClick={() => onToggle(o)}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm transition-colors ${on ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:border-primary/50"}`}>
+            {on && <Check size={14} strokeWidth={3} />}{o}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+const Rotulo = ({ children, opcional, ajuda }: { children: string; opcional?: boolean; ajuda?: string }) => (
+  <span className="mb-2 block">
+    <span className="block text-sm font-semibold">{children}{opcional && <span className="font-normal text-muted-foreground"> (opcional)</span>}</span>
+    {ajuda && <span className="mt-0.5 block text-xs text-muted-foreground">{ajuda}</span>}
+  </span>
 );
 
 export function LeadForm() {
@@ -48,11 +69,22 @@ export function LeadForm() {
   }, []);
 
   const corte = precisaCorte(a);
+  const ok = (mostra: (a: Answers) => boolean, v: string) => !mostra(a) || !!v;
   const valid = [
     !!a.objetivo,
-    !!a.faturamento && (a.empresa.trim().length > 1 || a.faturamento === SEM_EMPRESA) && !!a.jaImportou && (!corte || !!a.corte),
+    !!a.faturamento && (a.empresa.trim().length > 1 || semEmpresa(a)) && a.canais.length > 0 && (!vende(a) || !!a.compra),
+    ok(pergunta.categoria, a.categoria) && ok(pergunta.viagem, a.viagem) && ok(pergunta.radar, a.radar)
+      && ok(pergunta.margem, a.margem) && ok(pergunta.regime, a.regime) && (!corte || !!a.corte),
     a.nome.trim().length > 2 && phoneOk(a.whatsapp) && emailOk(a.email) && a.consentimento,
   ][i];
+
+  // "Ainda não vendo" não convive com canal marcado
+  const toggleCanal = (c: string) => setA((p) => {
+    const tem = p.canais.includes(c);
+    const canais = c === NAO_VENDE ? (tem ? [] : [NAO_VENDE])
+      : CANAIS.filter((x) => (x === c ? !tem : p.canais.includes(x))); // na ordem da lista, para a ficha sair sempre igual
+    return { ...p, canais, compra: canais.some((x) => x !== NAO_VENDE) ? p.compra : "" };
+  });
 
   const enviar = async () => {
     setEnviando(true);
@@ -62,19 +94,25 @@ export function LeadForm() {
     medirLead(a.objetivo);
     requestAnimationFrame(() => topo.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
   };
-  const next = () => { if (!valid || enviando) return; if (i === 2) void enviar(); else setI(i + 1); };
+  const ULTIMO = 3;
+  const next = () => {
+    if (!valid || enviando) return;
+    if (i === ULTIMO) void enviar();
+    else { setI(i + 1); requestAnimationFrame(() => topo.current?.scrollIntoView({ behavior: "smooth", block: "start" })); }
+  };
 
-  if (enviado !== null) return <div ref={topo} className="scroll-mt-24"><Resultado a={a} enviado={enviado} revisar={() => { setEnviado(null); setI(2); }} /></div>;
+  if (enviado !== null) return <div ref={topo} className="scroll-mt-24"><Resultado a={a} enviado={enviado} revisar={() => { setEnviado(null); setI(ULTIMO); }} /></div>;
 
-  const titulos = ["O que você quer agora?", "Sobre a sua empresa", "Seus dados para contato"];
+  const caso = { imersao: "Sobre a viagem", importar: "Sobre a importação", vender: "Sobre a sua margem" };
+  const titulos = ["O que você quer agora?", "Sobre a sua empresa", a.objetivo ? caso[a.objetivo] : "O seu caso", "Seus dados para contato"];
   return (
     <div ref={topo} className="scroll-mt-24">
       <form className="card-gm p-6 sm:p-8" onSubmit={(e) => { e.preventDefault(); next(); }} noValidate>
         <div className="mb-6">
-          <div className="grid grid-cols-3 gap-1.5">
-            {[0, 1, 2].map((n) => <div key={n} className={`h-1.5 rounded-full ${n <= i ? "bg-primary" : "bg-background"}`} />)}
+          <div className="grid grid-cols-4 gap-1.5">
+            {[0, 1, 2, 3].map((n) => <div key={n} className={`h-1.5 rounded-full ${n <= i ? "bg-primary" : "bg-background"}`} />)}
           </div>
-          <p className="mt-2 text-center text-xs text-muted-foreground">Passo {i + 1} de 3</p>
+          <p className="mt-2 text-center text-xs text-muted-foreground">Passo {i + 1} de {ULTIMO + 1}</p>
         </div>
         <h3 className="heading mb-5 text-2xl sm:text-3xl">{titulos[i]}</h3>
 
@@ -101,9 +139,52 @@ export function LeadForm() {
               </select>
             </label>
             <div>
-              <Rotulo>Você já importou da China?</Rotulo>
-              <Single label="Já importou" options={JA_IMPORTOU} value={a.jaImportou} onChange={(v) => set("jaImportou", v)} />
+              <Rotulo ajuda="Pode marcar mais de um.">Onde você vende hoje?</Rotulo>
+              <Multi label="Canais de venda" options={[...CANAIS, NAO_VENDE]} value={a.canais} onToggle={toggleCanal} />
             </div>
+            {vende(a) && (
+              <div>
+                <Rotulo>De onde vem o que você vende?</Rotulo>
+                <Single label="Origem do produto" options={COMPRA} value={a.compra} onChange={(v) => set("compra", v)} />
+              </div>
+            )}
+          </div>
+        )}
+
+        {i === 2 && (
+          <div className="grid gap-5">
+            {pergunta.categoria(a) && (
+              <div>
+                <Rotulo ajuda={a.objetivo === "imersao" ? "A feira tem 3 fases, uma para cada tipo de produto." : undefined}>
+                  {a.objetivo === "imersao" ? "O que você quer comprar na feira?" : "Que tipo de produto você quer trazer?"}
+                </Rotulo>
+                <Single label="Tipo de produto" options={CATEGORIAS.map((c) => c.rotulo)} value={a.categoria} onChange={(v) => set("categoria", v)} />
+              </div>
+            )}
+            {pergunta.viagem(a) && (
+              <div>
+                <Rotulo>Quem iria na viagem?</Rotulo>
+                <Single label="Quem iria" options={VIAGEM} value={a.viagem} onChange={(v) => set("viagem", v)} />
+              </div>
+            )}
+            {pergunta.radar(a) && (
+              <div>
+                <Rotulo ajuda="É a habilitação que permite a empresa importar.">A sua empresa já tem o Radar da Receita Federal?</Rotulo>
+                <Single label="Radar" options={RADAR} value={a.radar} onChange={(v) => set("radar", v)} />
+              </div>
+            )}
+            {pergunta.margem(a) && (
+              <div>
+                <Rotulo ajuda="Depois de comissão, frete, imposto, anúncio e devolução.">Você sabe quanto sobra em cada pedido?</Rotulo>
+                <Single label="Margem por pedido" options={MARGEM} value={a.margem} onChange={(v) => set("margem", v)} />
+              </div>
+            )}
+            {pergunta.regime(a) && (
+              <div>
+                <Rotulo>Qual o regime de imposto da empresa?</Rotulo>
+                <Multi label="Regime" options={REGIME} value={a.regime ? [a.regime] : []} onToggle={(v) => set("regime", a.regime === v ? "" : v)} />
+              </div>
+            )}
             {corte && (
               <div>
                 <Rotulo>{perguntaCorte(a)}</Rotulo>
@@ -113,13 +194,14 @@ export function LeadForm() {
               </div>
             )}
             <label className="block">
-              <Rotulo opcional>O que você quer trazer ou resolver?</Rotulo>
-              <input className="field" maxLength={200} placeholder="Ex.: utilidades domésticas, margem na Shopee" value={a.quer} onChange={(e) => set("quer", e.target.value)} />
+              <Rotulo opcional>{a.objetivo === "vender" ? "O que mais incomoda na sua margem hoje?" : "Qual produto você quer trazer?"}</Rotulo>
+              <input className="field" maxLength={200} value={a.quer} onChange={(e) => set("quer", e.target.value)}
+                placeholder={a.objetivo === "vender" ? "Ex.: vendo muito e sobra pouco" : "Ex.: garrafa térmica, organizador de cozinha"} />
             </label>
           </div>
         )}
 
-        {i === 2 && (
+        {i === 3 && (
           <div className="grid gap-5">
             <label className="block">
               <Rotulo>Qual o seu nome completo?</Rotulo>
@@ -134,6 +216,10 @@ export function LeadForm() {
               <Rotulo>Qual o seu e-mail?</Rotulo>
               <input className="field" type="email" autoComplete="email" placeholder="seuemail@exemplo.com" value={a.email} onChange={(e) => set("email", e.target.value)} />
             </label>
+            <div>
+              <Rotulo opcional>Melhor horário para o time chamar você</Rotulo>
+              <Multi label="Melhor horário" options={HORARIO} value={a.horario ? [a.horario] : []} onToggle={(v) => set("horario", a.horario === v ? "" : v)} />
+            </div>
             {/* campo escondido contra robô */}
             <input type="text" tabIndex={-1} autoComplete="off" aria-hidden className="hidden" value={a.hp} onChange={(e) => set("hp", e.target.value)} />
             <label className="flex cursor-pointer items-start gap-3 text-sm">
@@ -148,7 +234,7 @@ export function LeadForm() {
         <div className="mt-7 flex gap-3">
           {i > 0 && <button type="button" onClick={() => setI(i - 1)} className="btn-outline"><ArrowLeft size={18} />Voltar</button>}
           <button type="submit" disabled={!valid || enviando} className="btn-primary flex-1">
-            {i < 2 ? "Continuar" : enviando ? "Enviando..." : "Enviar"}<ArrowRight size={18} />
+            {i < ULTIMO ? "Continuar" : enviando ? "Enviando..." : "Enviar"}<ArrowRight size={18} />
           </button>
         </div>
       </form>
@@ -181,7 +267,26 @@ function Resultado({ a, enviado, revisar }: { a: Answers; enviado: boolean; revi
   const passos: [string, string?][] = [[enviado ? "Solicitação enviada" : "Diagnóstico respondido"]];
   if (!enviado) passos.push(["Enviar o resumo no WhatsApp", "Agora"]);
   if (s === "vender") passos.push(["Você fica na lista da turma de 2027"], ["A gente avisa quando a turma abrir"]);
-  else passos.push(["Contato do time pelo WhatsApp", enviado ? PRAZO_CONTATO : undefined], ["Diagnóstico da sua operação"], [ultimo]);
+  else {
+    passos.push(["Contato do time pelo WhatsApp", enviado ? PRAZO_CONTATO : undefined], ["Diagnóstico da sua operação"]);
+    if (pergunta.radar(a) && a.radar !== RADAR[0]) passos.push(["Habilitação da empresa no Radar"]);
+    passos.push([ultimo]);
+  }
+  const vistos = achados(a);
+  const quadro = vistos.length > 0 && (
+    <div className="card-gm p-6 sm:p-8">
+      <p className="eyebrow">Pelas suas respostas</p>
+      <h4 className="heading mt-2 text-2xl">O que já dá para ver</h4>
+      <ul className="mt-4 grid gap-4">
+        {vistos.map(([t, d]) => (
+          <li key={t} className="border-l-2 border-primary pl-4">
+            <p className="font-semibold">{t}</p>
+            <p className="mt-0.5 text-sm text-muted-foreground">{d}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 
   // sem o envio automático (URL vazia ou erro de rede), o WhatsApp é o passo que falta e vai logo abaixo do título
   const adiantar = (
@@ -238,6 +343,8 @@ function Resultado({ a, enviado, revisar }: { a: Answers; enviado: boolean; revi
           </div>
         )}
       </div>
+
+      {quadro}
 
       {/* adiantar: é o lead quem manda a mensagem; nada automático da Green Margem */}
       {enviado && adiantar}

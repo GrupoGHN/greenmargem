@@ -218,7 +218,7 @@ export function App() {
         <Section id="como-funciona" light>
           <Head eyebrow="Como funciona">3 passos, sem enrolação</Head>
           <ol className="grid gap-6 md:grid-cols-3 md:gap-10">
-            {[["Você faz o diagnóstico", "São 3 passos. Leva menos de 1 minuto."], ["A gente chama você no WhatsApp", "E marca o diagnóstico de 20 minutos."], ["Você sai com o plano do que fazer primeiro", "Contratando a gente ou não."]].map(([t, d], n) => (
+            {[["Você faz o diagnóstico", "São 4 passos. Leva uns 2 minutos."], ["A gente chama você no WhatsApp", "E marca o diagnóstico de 20 minutos."], ["Você sai com o plano do que fazer primeiro", "Contratando a gente ou não."]].map(([t, d], n) => (
               <li key={t} className="flex items-start gap-4 border-t-2 border-foreground pt-5 md:block">
                 <span className="heading destaque text-5xl md:text-6xl">{n + 1}</span>
                 <div>
@@ -313,7 +313,7 @@ export function App() {
           <div className="mx-auto max-w-2xl">
             <p className="eyebrow mb-3">Gratuito</p>
             <h2 className="heading text-4xl sm:text-6xl">Diagnóstico da sua operação</h2>
-            <p className="mt-3 mb-8 text-lg text-muted-foreground">São 3 passos. Leva menos de 1 minuto.</p>
+            <p className="mt-3 mb-8 text-lg text-muted-foreground">São 4 passos, quase tudo de tocar. Leva uns 2 minutos.</p>
             <LeadForm />
           </div>
         </Section>
